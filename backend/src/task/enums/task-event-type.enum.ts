@@ -1,0 +1,8 @@
+export enum TaskEventType {
+  CREATED = 'CREATED',
+  MOVED = 'MOVED',
+  UPDATED = 'UPDATED',
+  ASSIGNED = 'ASSIGNED',
+  COMMENTED = 'COMMENTED',
+  DELETED = 'DELETED',
+}
