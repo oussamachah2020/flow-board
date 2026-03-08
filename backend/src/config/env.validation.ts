@@ -28,4 +28,9 @@ export const envValidationSchema = Joi.object({
     .description(
       'Frontend app base URL for invitation links (e.g. https://app.example.com)',
     ),
+  CORS_ORIGIN: Joi.string()
+    .optional()
+    .description(
+      'Allowed CORS origin(s), comma-separated (e.g. http://localhost:5173 or https://app.example.com). Defaults to http://localhost:5173.',
+    ),
 });

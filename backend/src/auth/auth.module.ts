@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { RefreshToken } from '../users/entities/refresh.entity';
+import { EmailToken } from '../users/entities/email-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -25,7 +26,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
         }) as JwtModuleOptions,
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([RefreshToken]),
+    TypeOrmModule.forFeature([RefreshToken, EmailToken]),
   ],
   providers: [AuthService, JwtStrategy, JwtAuthGuard],
   controllers: [AuthController],

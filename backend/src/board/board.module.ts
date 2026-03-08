@@ -5,6 +5,7 @@ import { BoardMember } from './entities/board-member.entity';
 import { BoardColumn } from './entities/board-column.entity';
 import { Task } from '../task/entities/task.entity';
 import { BoardController } from './board.controller';
+import { BoardsController } from './boards.controller';
 import { BoardService } from './board.service';
 import { BoardGuard } from './guards/board.guard';
 import { WorkspaceModule } from '../workspace/workspace.module';
@@ -16,7 +17,7 @@ import { AuthModule } from '../auth/auth.module';
     WorkspaceModule,
     AuthModule,
   ],
-  controllers: [BoardController],
+  controllers: [BoardController, BoardsController],
   providers: [BoardService, BoardGuard],
   exports: [BoardService, TypeOrmModule],
 })

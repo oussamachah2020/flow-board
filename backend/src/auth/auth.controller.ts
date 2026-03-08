@@ -1,9 +1,23 @@
-import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from '../users/dto/login.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateThemeDto } from './dto/update-theme.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayload } from '../types/auth';
@@ -54,13 +68,8 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const { accessToken, refreshToken } = await this.authService.register(dto);
-    this.setRefreshTokenCookie(res, refreshToken);
-    return { accessToken };
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   @Post('login')
@@ -85,6 +94,45 @@ export class AuthController {
       await this.authService.refresh(refreshToken ?? '');
     this.setRefreshTokenCookie(res, newRefreshToken);
     return { accessToken };
+  }
+
+  @Post('verify-email')
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    await this.authService.verifyEmail(dto.token);
+    return {};
+  }
+
+  @Post('resend-verification')
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    await this.authService.resendVerification(dto.email);
+    return {};
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(dto.email);
+    return {};
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto.token, dto.password);
+    return {};
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  getMe(@CurrentUser() user: JwtPayload) {
+    return this.authService.getMe(user.sub);
+  }
+
+  @Patch('me/theme')
+  @UseGuards(JwtAuthGuard)
+  updateTheme(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateThemeDto,
+  ) {
+    return this.authService.updateTheme(user.sub, dto.theme);
   }
 
   @Post('logout')

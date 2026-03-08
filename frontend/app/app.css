@@ -1,15 +1,192 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Poppins", sans-serif;
+  --font-mono: "Poppins", sans-serif;
+  --radius: 6px;
+  --radius-card: 8px;
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--border);
 }
 
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
+:root,
+.dark {
+  --bg:            #090909;
+  --bg-subtle:     #101010;
+  --surface:       #161616;
+  --surface-hover: #1e1e1e;
+  --border:        #2c2c2c;
+  --border-muted:  #1e1e1e;
+  --text:          #f2f2f2;
+  --text-muted:    #a0a0a0;
+  --text-subtle:   #6a6a6a;
+  --accent:        #ffffff;
+  --accent-hover:  #e0e0e0;
+  --red:           #e54d4d;
+  --amber:         #e5a029;
+  --blue:          #4d7fe5;
+  --green:         #4de57a;
+  --purple:        #a855f7;
+  --ring:          #333333;
+  --primary-foreground: #090909;
+  --border-hover:  #3a3a3a;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+.light {
+  --bg:            #f5f5f5;
+  --bg-subtle:     #efefef;
+  --surface:       #ffffff;
+  --surface-hover: #f0f0f0;
+  --border:        #e0e0e0;
+  --border-muted:  #eaeaea;
+  --text:          #111111;
+  --text-muted:    #555555;
+  --text-subtle:   #999999;
+  --accent:        #111111;
+  --accent-hover:  #222222;
+  --red:           #dc2626;
+  --amber:         #d97706;
+  --blue:          #2563eb;
+  --green:         #16a34a;
+  --purple:        #9333ea;
+  --ring:          #bbbbbb;
+  --primary-foreground: #ffffff;
+  --border-hover:  #cccccc;
+}
+
+:root {
+  /* Legacy mapping for existing components */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --secondary: transparent;
+  --secondary-foreground: var(--text-muted);
+  --muted: var(--surface-hover);
+  --muted-foreground: var(--text-muted);
+  --destructive: var(--red);
+  --destructive-foreground: var(--accent);
+  --input: var(--border);
+}
+
+* {
+  font-weight: inherit;
+}
+
+html {
+  font-size: 13px;
+  line-height: 1.5;
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+}
+
+html.dark { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Override Tailwind preflight: Poppins everywhere, weight 500 */
+@layer base {
+  html,
+  body {
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+  }
+}
+
+*, *::before, *::after {
+  font-family: inherit;
+}
+
+/* Code and font-mono use Poppins like everything else */
+code, kbd, samp, pre,
+[class*="font-mono"] {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+}
+
+/* Heading sizes; weight 500 everywhere */
+h1 { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.3; }
+h2 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.4; }
+h3 { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+h4, h5, h6 { font-size: 13px; font-weight: 500; }
+
+/* Form elements: Poppins, weight 500 */
+button, input, textarea, select {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+}
+
+/* Shadcn component font overrides */
+[data-radix-select-trigger],
+[data-radix-select-content],
+[data-radix-popover-content],
+[role="dialog"],
+[role="alertdialog"] {
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
+/* Section labels (e.g. WORKSPACES): Poppins, 500, 10px, 0.06em, uppercase */
+.section-label {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Skeleton: shimmer animation */
+@keyframes flowboard-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface-hover) 20%,
+    var(--border) 40%,
+    var(--surface-hover) 60%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: flowboard-shimmer 1.2s ease-in-out infinite;
+}
+
+/* Auth form entrance */
+.auth-form-container {
+  animation: authFormIn 0.3s ease-out forwards;
+}
+
+@keyframes authFormIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

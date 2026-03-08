@@ -25,6 +25,9 @@ export class User {
   @Column({ type: 'enum', enum: ROLE, default: ROLE.MEMEBER })
   role: ROLE;
 
+  @Column({ type: 'boolean', default: false, name: 'email_verified' })
+  emailVerified: boolean;
+
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
 

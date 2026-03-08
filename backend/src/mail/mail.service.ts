@@ -37,6 +37,59 @@ function workspaceInvitationHtml(
 `.trim();
 }
 
+function verificationEmailHtml(verifyUrl: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 480px; margin: 0 auto; padding: 24px;">
+    <p style="margin-bottom: 16px;">Verify your email address to complete your FlowBoard account.</p>
+    <p style="margin-bottom: 24px;">
+      <a href="${escapeHtml(verifyUrl)}"
+         style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+        Verify email
+      </a>
+    </p>
+    <p style="font-size: 14px; color: #666;">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <a href="${escapeHtml(verifyUrl)}" style="color: #2563eb; word-break: break-all;">${escapeHtml(verifyUrl)}</a>
+    </p>
+  </body>
+</html>
+`.trim();
+}
+
+function passwordResetEmailHtml(resetUrl: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333; max-width: 480px; margin: 0 auto; padding: 24px;">
+    <p style="margin-bottom: 16px;">You requested a password reset for your FlowBoard account.</p>
+    <p style="margin-bottom: 24px;">
+      <a href="${escapeHtml(resetUrl)}"
+         style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+        Reset password
+      </a>
+    </p>
+    <p style="font-size: 14px; color: #666;">
+      If you didn't request this, you can ignore this email.
+    </p>
+    <p style="font-size: 14px; color: #666; margin-top: 24px;">
+      If the button doesn't work, copy and paste this link into your browser:<br>
+      <a href="${escapeHtml(resetUrl)}" style="color: #2563eb; word-break: break-all;">${escapeHtml(resetUrl)}</a>
+    </p>
+  </body>
+</html>
+`.trim();
+}
+
 function escapeHtml(s: string): string {
   const map: Record<string, string> = {
     '&': '&amp;',
@@ -77,6 +130,34 @@ export class MailService {
     if (error) {
       return { error };
     }
+    return { id: data!.id };
+  }
+
+  async sendVerificationEmail(
+    to: string,
+    verifyUrl: string,
+  ): Promise<{ id: string } | { error: { message: string; name: string } }> {
+    const { data, error } = await this.resend.emails.send({
+      from: this.fromEmail,
+      to: [to],
+      subject: 'Verify your FlowBoard email',
+      html: verificationEmailHtml(verifyUrl),
+    });
+    if (error) return { error };
+    return { id: data!.id };
+  }
+
+  async sendPasswordResetEmail(
+    to: string,
+    resetUrl: string,
+  ): Promise<{ id: string } | { error: { message: string; name: string } }> {
+    const { data, error } = await this.resend.emails.send({
+      from: this.fromEmail,
+      to: [to],
+      subject: 'Reset your FlowBoard password',
+      html: passwordResetEmailHtml(resetUrl),
+    });
+    if (error) return { error };
     return { id: data!.id };
   }
 }

@@ -110,10 +110,7 @@ export class TaskService {
     }
   }
 
-  async getTasks(
-    boardId: string,
-    filters: FilterTasksDto,
-  ): Promise<Record<string, Task[]>> {
+  async getTasks(boardId: string, filters: FilterTasksDto): Promise<Task[]> {
     const qb = this.taskRepository
       .createQueryBuilder('task')
       .where('task.board_id = :boardId', { boardId })
@@ -159,14 +156,7 @@ export class TaskService {
 
     qb.orderBy('task.column_id', 'ASC').addOrderBy('task.order', 'ASC');
 
-    const tasks = await qb.getMany();
-    const grouped: Record<string, Task[]> = {};
-    for (const t of tasks) {
-      const key = t.columnId;
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(t);
-    }
-    return grouped;
+    return qb.getMany();
   }
 
   async getTask(taskId: string): Promise<Task> {
@@ -291,14 +281,20 @@ export class TaskService {
       throw new NotFoundException('Column not found');
     }
 
+    const newVersion = task.version + 1;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      task.columnId = dto.columnId;
-      task.order = dto.order;
-      task.version += 1;
-      await queryRunner.manager.save(Task, task);
+      await queryRunner.manager.update(
+        Task,
+        { id: taskId },
+        {
+          columnId: dto.columnId,
+          order: dto.order,
+          version: newVersion,
+        },
+      );
       await queryRunner.commitTransaction();
     } catch (err) {
       await queryRunner.rollbackTransaction();

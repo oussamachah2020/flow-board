@@ -62,6 +62,20 @@ export class UsersService {
     return user;
   }
 
+  async updateEmailVerified(userId: string, verified: boolean): Promise<void> {
+    await this.userRepository.update(
+      { id: userId },
+      { emailVerified: verified },
+    );
+  }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    await this.userRepository.update(
+      { id: userId },
+      { password: hashedPassword },
+    );
+  }
+
   async getProfileByUserId(userId: string): Promise<Profile> {
     const profile: Profile | null = await this.profileRepository.findOne({
       where: { user: { id: userId } },
