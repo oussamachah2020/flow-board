@@ -46,8 +46,21 @@ export class AuthService {
     );
   }
 
+  private isEmailVerificationEnabled(): boolean {
+    const val = this.configService.get<string | boolean>('EMAIL_VERIFICATION_ENABLED');
+    if (val === undefined) return true;
+    if (typeof val === 'boolean') return val;
+    return val !== 'false' && val !== '0';
+  }
+
   async register(dto: RegisterDto): Promise<{ message: string }> {
     const user = await this.usersService.createUser(dto);
+    if (!this.isEmailVerificationEnabled()) {
+      await this.usersService.updateEmailVerified(user.id, true);
+      return {
+        message: 'Account created. You can sign in.',
+      };
+    }
     const appUrl = this.getAppUrl();
     const { rawToken } = await this.createEmailToken(
       user.id,
@@ -82,7 +95,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    if (!user.emailVerified) {
+    if (this.isEmailVerificationEnabled() && !user.emailVerified) {
       throw new UnauthorizedException('Please verify your email before signing in');
     }
     const tokens = await this.issueTokenPair(user);
