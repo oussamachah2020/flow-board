@@ -1,0 +1,56 @@
+---
+description: Checklist for reviewing and improving existing UI in Flowboard. Catches anti-patterns and enforces the project design system.
+globs: frontend/app/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Skill: Design Review
+
+Use this checklist when reviewing or improving existing UI. Base criteria: [design.mdc](../design.mdc), [conventions.mdc](../conventions.mdc).
+
+## 1. Color and tokens
+
+- [ ] **No hardcoded hex/rgb** for semantic colors. Use `var(--bg)`, `var(--text)`, `var(--border)`, `var(--surface)`, `var(--red)`, etc. in Tailwind (e.g. `bg-[var(--surface)]`, `text-[var(--text-muted)]`).
+- [ ] **No duplicate priority/type color maps.** Task priority and type colors must come from `~/lib/design-tokens` (PRIORITY_COLORS, TYPE_COLORS). If a component defines its own `PRIORITY_COLORS` or `TYPE_COLORS` object, refactor to import from design-tokens (see create-task-modal vs task-detail-sheet: the sheet correctly uses `PRIORITY_COLORS` from design-tokens).
+- [ ] **Light/dark:** Colors that should adapt are using CSS variables, not fixed light/dark values.
+
+## 2. Typography
+
+- [ ] **Font family:** Poppins (already set in app.css). No new font-family unless specified.
+- [ ] **Body/copy:** 13px, weight 400 (font-light) for body; 12px for secondary copy where used in the codebase.
+- [ ] **Labels:** Section/field labels use 10px uppercase with `tracking-[0.06em]` or `tracking-[0.1em]` and `text-[var(--text-subtle)]` (e.g. "Description", "Status", "Workspace" in task-detail-sheet and create-task-modal).
+- [ ] **Headings:** Page/section titles 18px or 15px, weight 600; dialog titles 15px–20px with `font-medium` as in existing modals.
+- [ ] **Consistency:** No arbitrary mix of `font-medium` and `font-light` without a clear hierarchy; match existing patterns (e.g. input text `font-light`, button labels `font-medium`).
+
+## 3. Spacing and layout
+
+- [ ] **Label to input:** `space-y-1.5` between label and control (as in create-task-modal, confirm-delete-dialog).
+- [ ] **Form sections:** `space-y-4` or `gap-4` between sections; `grid grid-cols-2 gap-3` for two-column fields.
+- [ ] **Dialogs/sheets:** Content padding `p-6`; footer `gap-2`; sheet header `px-6 py-5`, body `px-6 py-6` (see task-detail-sheet, create-task-modal).
+- [ ] **Nav items:** `px-4 py-1.5` for sidebar links (see _app/route.tsx).
+
+## 4. Radius and controls
+
+- [ ] **Form controls:** `rounded-md` (6px). Do not use `rounded-lg` for inputs, selects, or primary buttons in forms.
+- [ ] **Cards/surfaces:** Cards use `rounded-xl` in the Card component; overlays (dialog, sheet) follow existing rounded usage.
+
+## 5. Focus and accessibility
+
+- [ ] **Focus ring:** Interactive elements use `focus-visible:ring-1 focus-visible:ring-[var(--ring)]` or `focus:ring-1 focus:ring-[var(--border-hover)]` as in existing inputs and selects.
+- [ ] **data-slot:** UI primitives in `components/ui/` have a `data-slot` on the root for styling hooks.
+
+## 6. Anti-patterns to catch
+
+- **Inline color objects** in the component (e.g. a local `PRIORITY_COLORS` or `TYPE_COLORS`) → move to or import from `~/lib/design-tokens`.
+- **Tailwind color names** for semantic UI (e.g. `text-gray-500`, `bg-white`) → replace with `var(--text-muted)`, `var(--surface)`, etc.
+- **rounded-lg** on form controls → change to `rounded-md`.
+- **Inconsistent label style** (e.g. bold 14px labels) → use 10px uppercase `text-[var(--text-subtle)]` for section/field labels.
+- **Missing cn()** on root or composable parts → merge `className` with `cn(baseStyles, className)`.
+- **Barrel exports** (e.g. re-exporting from `components/index.ts`) → not used in this project; import from the concrete file.
+
+## 7. After review
+
+- Fix token and typography issues first (colors, font sizes, weights).
+- Then spacing and radius.
+- Then remove duplicate constants and wire to design-tokens.
+- Optionally extract repeated label/input groups into small presentational components if they appear in multiple places.

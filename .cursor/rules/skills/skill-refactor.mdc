@@ -1,0 +1,55 @@
+---
+description: Procedure for refactoring existing components — splitting, extracting hooks, improving types. Aligns with Flowboard structure and conventions.
+globs: frontend/app/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Skill: Refactor Component
+
+Follow this procedure when refactoring existing components. Dependencies: [structure.mdc](../structure.mdc), [conventions.mdc](../conventions.mdc), [design.mdc](../design.mdc).
+
+## 1. Clarify scope
+
+- **Split:** One component does too much (e.g. layout + form + list). Extract subcomponents or move sections into dedicated files.
+- **Hooks:** Repeated data-fetch or state logic. Extract to a custom hook (e.g. `useWorkspaceBoards`, `useTaskMutations`).
+- **Types:** Loose or duplicated types. Move to `~/types/*` or define shared interfaces next to the API module.
+- **Design/consistency:** Colors, typography, or spacing don’t match the design system. Apply [skill-design-review.mdc](skill-design-review.mdc) and [design.mdc](../design.mdc).
+
+## 2. Splitting components
+
+- **Where to put new files:**  
+  - Reusable UI → `frontend/app/components/ui/<name>.tsx` (kebab-case).  
+  - Feature-specific → `frontend/app/components/<feature>/<name>.tsx` (e.g. `dashboard/`, `board/`).
+- **Naming:** Keep `kebab-case.tsx`. Name by responsibility (e.g. `task-metadata-panel.tsx`, `comment-list.tsx`).
+- **Props:** Define and export `ComponentNameProps`. Use `React.ComponentProps<"div">` (or primitive) for passthrough; merge `className` with `cn()`.
+- **No barrels:** Do not add `index.ts`; import from the new file with `~/*`.
+
+Example from this codebase: `TaskDetailSheet` could be split into a left column (description + comments) and a right column (metadata panel), each in its own component under `components/board/`, with props for data and callbacks.
+
+## 3. Extracting hooks
+
+- **Data fetching:** If the same `useQuery`/`useMutation`/`useQueries` pattern appears in multiple components, extract to a hook (e.g. `useWorkspaces()`, `useBoardTasks(workspaceId, boardId)`). Return `{ data, isLoading, error, refetch }` or mutation result. Use the same query keys as in [conventions.mdc](../conventions.mdc) (`["workspaces"]`, `["board", boardId, "tasks"]`, etc.).
+- **Hooks location:** Either next to the feature (e.g. `components/board/use-task-mutations.ts`) or in a shared `hooks/` folder if used across features. This codebase does not yet have a top-level `hooks/`; prefer co-locating with the feature.
+- **State logic:** Repeated modal open/close + form reset can be a small hook (e.g. `useModalForm(resetFields)`). Keep Zustand for auth/theme only; local UI state stays in useState or the extracted hook.
+
+## 4. Improving types
+
+- **Shared domain types:** Keep in `frontend/app/types/` (e.g. `workspace.ts` for Task, Board, Workspace, WorkspaceMember). Use these in API modules and components; avoid redefining the same shape.
+- **API payloads:** Types for request/response can live in the same file as the API (e.g. in `task-api.ts`) or in `types/` if shared. Match backend DTOs where relevant.
+- **Component props:** Use `interface` and export it. For CVA components, use `VariantProps<typeof variants>`. For ref passthrough, use `React.ComponentProps<"input">` and `forwardRef<HTMLInputElement, ...>`.
+- **Stricter typing:** Replace `any` or loose object types with interfaces; use `Parameters<typeof api.fn>[2]` for mutation body types when it fits (e.g. `Parameters<typeof taskApi.updateTask>[3]`).
+
+## 5. Refactor steps (order)
+
+1. **Types:** Introduce or centralize interfaces; fix any and loose types. Ensure API modules and components use shared types from `~/types` or the API file.
+2. **Hooks:** Extract data-fetch and mutation logic into hooks with consistent query keys and invalidation. Replace inline useQuery/useMutation in components with the new hook.
+3. **Split UI:** Extract sections into new components; pass data and callbacks via props. Keep files under the same structure (ui vs feature folder).
+4. **Design pass:** Run through [skill-design-review.mdc](skill-design-review.mdc) (tokens, typography, spacing, no duplicate color maps, rounded-md for controls).
+5. **Imports:** Update all imports to the new paths; remove any dead code. Do not add barrel exports.
+
+## 6. What not to do
+
+- Do not move auth or theme state into new Zustand stores; keep using `useAuthStore` and `useThemeStore`.
+- Do not change query key shapes when extracting hooks; keep `["workspaces"]`, `["board", boardId, "tasks"]`, etc., for cache and invalidation to stay correct.
+- Do not add barrel files (`index.ts`) for components or hooks.
+- Do not duplicate design tokens or priority/type color maps; use `~/lib/design-tokens` and CSS variables.

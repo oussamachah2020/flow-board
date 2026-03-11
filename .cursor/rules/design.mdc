@@ -1,0 +1,73 @@
+---
+description: Design tokens, typography, spacing, and visual consistency for the Flowboard UI.
+alwaysApply: false
+---
+# Design (Flowboard)
+
+Use this rule when building or styling components so the UI stays consistent. The product aims for a **Linear-like** look: dark-first, minimal, subtle borders, semantic colors for status/priority.
+
+## Design tokens
+
+**Defined in:** `frontend/app/app.css` (CSS variables) and `frontend/app/lib/design-tokens.ts` (task colors).
+
+### Colors (CSS variables)
+
+- **Backgrounds:** `--bg`, `--bg-subtle`, `--surface`, `--surface-hover`
+- **Text:** `--text`, `--text-muted`, `--text-subtle`
+- **Borders:** `--border`, `--border-muted`, `--border-hover`
+- **Actions:** `--accent`, `--accent-hover`
+- **Semantic:** `--red`, `--amber`, `--blue`, `--green`, `--purple` (status/priority)
+- **Focus:** `--ring`
+
+Use in Tailwind via arbitrary values: `bg-[var(--surface)]`, `text-[var(--text-muted)]`, `border-[var(--border)]`.
+
+### Task colors
+
+Import from `~/lib/design-tokens`:
+
+- `PRIORITY_COLORS` — LOW, MEDIUM, HIGH, URGENT (map to CSS vars)
+- `TYPE_COLORS` — TASK, BUG, HOTFIX, FEATURE, IMPROVEMENT, TEST
+
+Use for badges, dots, and inline styles (e.g. `backgroundColor: PRIORITY_COLORS[priority]`).
+
+### Radius
+
+- `--radius: 6px` — inputs, buttons, small controls → use `rounded-md`
+- `--radius-card: 8px` — cards can use `rounded-xl` (12px) per existing Card component
+
+## Typography
+
+- **Font:** Poppins (weights 400, 500, 600). Loaded in `root.tsx` via Google Fonts.
+- **Body:** 13px, weight 400, line-height 1.5–1.6
+- **Headings:** h1 18px, h2 15px, h3–h6 13px; weight 600; `tracking-tight` / `-0.02em` for titles
+- **Labels / inputs:** weight 500
+- **Section labels:** 10px, uppercase, `tracking-[0.06em]` or `tracking-[0.1em]`, `text-[var(--text-subtle)]`
+- **Form labels in modals:** `font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]`
+- **Small / meta:** 11px, 12px with `font-mono` for codes/timestamps
+
+## Spacing
+
+- **Label to input:** `space-y-1.5`
+- **Form sections:** `space-y-4`, `gap-4`, `gap-8` for larger blocks
+- **Side-by-side fields:** `grid grid-cols-2 gap-3`
+- **Dialog content:** `p-6`; footer `gap-2`
+- **Nav items:** `px-4 py-1.5`
+- **Sheet padding:** `px-6 py-5` (header), `px-6 py-6` (body)
+
+## Component patterns (consistent in this codebase)
+
+- **Inputs:** `rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[13px] font-light`
+- **Select trigger:** `rounded-md border-[var(--border)] bg-[var(--surface)]` (or `bg-[var(--bg-subtle)]`)
+- **Dropdown / popover content:** `border-[var(--border)] bg-[var(--surface)]`
+- **Primary button:** `bg-[var(--accent)] text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]`
+- **Outline button:** `border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]`
+- **Danger:** `text-[var(--red)]` or `hover:text-[var(--red)]`; destructive button `bg-[var(--red)]`
+- **Focus ring:** `focus-visible:ring-1 focus-visible:ring-[var(--ring)]` or `focus:ring-1 focus:ring-[var(--border-hover)]`
+
+## What “consistent” means here
+
+- Prefer **CSS variables** over hardcoded hex/tailwind color names so light/dark and tokens stay in sync.
+- Use **design-tokens.ts** for task priority/type colors instead of redefining in components.
+- Match **typography**: 13px body, 10px uppercase labels, 18px page titles.
+- Use **rounded-md** for form controls and **rounded-xl** for cards.
+- Keep **spacing** predictable: `space-y-1.5` for label+input, `gap-3`/`gap-4` for sections.

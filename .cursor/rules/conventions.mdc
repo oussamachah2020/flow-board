@@ -1,0 +1,108 @@
+---
+description: Component structure, props typing, state management, and API patterns for the Flowboard frontend.
+globs: frontend/app/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Conventions (Flowboard)
+
+Use this rule when writing or refactoring components, hooks, and API usage so code matches existing patterns.
+
+## Component structure
+
+- **Feature components:** named export, e.g. `export function CreateTaskModal(...)`.
+- **UI primitives:** named exports, e.g. `export { Button, buttonVariants }`.
+- **Props interface:** define above the component and export it: `export interface CreateTaskModalProps { ... }`.
+- **Passthrough props:** use `React.ComponentProps<"div">` or `React.ComponentProps<typeof SomePrimitive>` and spread `...props` after `className`.
+
+Example (from create-task-modal):
+
+```tsx
+export interface CreateTaskModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultWorkspaceId?: string;
+  defaultBoardId?: string;
+}
+
+export function CreateTaskModal({
+  open,
+  onOpenChange,
+  defaultWorkspaceId,
+  defaultBoardId,
+}: CreateTaskModalProps) {
+  // ...
+}
+```
+
+Example (from card.tsx):
+
+```tsx
+function Card({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card"
+      className={cn("rounded-xl border bg-card ...", className)}
+      {...props}
+    />
+  );
+}
+```
+
+## Props typing
+
+- Use **interface** for component props (e.g. `TaskDetailSheetProps`, `ConfirmDeleteDialogProps`).
+- **CVA components:** extend with `& VariantProps<typeof buttonVariants>` and optional `asChild?: boolean`.
+- **Form elements:** use `React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>` and set `displayName`.
+
+## State management
+
+- **Zustand:** only for auth token and theme. Use `useAuthStore`, `useThemeStore`.
+- **TanStack Query:** all server data. Use `useQuery`, `useMutation`, `useQueries` with consistent query keys.
+- **useState:** local UI (modal open, form fields, focus state).
+
+**Query key patterns:**
+
+- `["workspaces"]`
+- `["workspaces", workspaceId, "boards"]`
+- `["board", boardId]`, `["board", boardId, "tasks"]`
+- `["task", workspaceId, boardId, taskId]`
+- `["profile"]`, `["my-tasks", workspaceId, boardId]`
+
+After mutations, call `queryClient.invalidateQueries({ queryKey: [...] })` (and optionally `setQueryData` for optimistic-style updates).
+
+## API pattern
+
+- **API modules** in `~/lib/*-api.ts`: `taskApi`, `workspaceApi`, `authApi`.
+- Each method returns the axios promise (e.g. `api.get<T>(...)`, `api.post<T>(...)`).
+- In components, use `.then((r) => r.data)` or pass the promise to `queryFn`/`mutationFn`.
+
+Example (from task-api.ts):
+
+```ts
+export const taskApi = {
+  createTask(workspaceId: string, boardId: string, body: { ... }) {
+    return api.post<Task>(taskPath(workspaceId, boardId), body);
+  },
+  getTask(workspaceId: string, boardId: string, taskId: string) {
+    return api.get<Task>(`${taskPath(workspaceId, boardId)}/${taskId}`);
+  },
+  // ...
+};
+```
+
+## Patterns to follow
+
+- Use **cn()** from `~/lib/utils` for every className merge.
+- Use **var(--token)** in Tailwind classes for colors (e.g. `border-[var(--border)]`, `bg-[var(--surface)]`).
+- Use **PRIORITY_COLORS** and **TYPE_COLORS** from `~/lib/design-tokens` for task badges/dots.
+- Use **toast.success()** / **toast.error()** (sonner) for user feedback.
+- **Controlled modals:** accept `open` and `onOpenChange(open: boolean)`.
+- **Error handling:** read `err.response?.data?.message` for API errors and set local error state or toast.
+
+## Patterns to avoid
+
+- Do **not** duplicate color maps in components; use `design-tokens.ts` or CSS variables.
+- Do **not** use `rounded-lg` for form controls; use `rounded-md` (6px).
+- Do **not** mix arbitrary font weights with token-based typography; use `font-light` / `font-medium` with `text-[13px]` or `text-[12px]` consistently.
+- Do **not** add barrel files (e.g. `components/index.ts`); import from the concrete file.

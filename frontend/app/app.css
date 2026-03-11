@@ -85,7 +85,7 @@ html {
   font-size: 13px;
   line-height: 1.5;
   font-family: "Poppins", sans-serif;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 html.dark { color-scheme: dark; }
@@ -93,7 +93,7 @@ html.light { color-scheme: light; }
 
 body {
   font-family: "Poppins", sans-serif;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 13px;
   line-height: 1.6;
   letter-spacing: 0;
@@ -103,12 +103,12 @@ body {
   color: var(--text);
 }
 
-/* Override Tailwind preflight: Poppins everywhere, weight 500 */
+/* Override Tailwind preflight: Poppins, body 400 / labels 500 / headings 600 */
 @layer base {
   html,
   body {
     font-family: "Poppins", sans-serif;
-    font-weight: 500;
+    font-weight: 400;
   }
 }
 
@@ -116,20 +116,20 @@ body {
   font-family: inherit;
 }
 
-/* Code and font-mono use Poppins like everything else */
+/* Codes, badges, timestamps, slugs, prefixes — Poppins */
 code, kbd, samp, pre,
 [class*="font-mono"] {
   font-family: "Poppins", sans-serif;
   font-weight: 500;
 }
 
-/* Heading sizes; weight 500 everywhere */
-h1 { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.3; }
-h2 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.4; }
-h3 { font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
-h4, h5, h6 { font-size: 13px; font-weight: 500; }
+/* Heading sizes: 18px page titles, 15px section titles; weight 600 for headings */
+h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.4; }
+h3 { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+h4, h5, h6 { font-size: 13px; font-weight: 600; }
 
-/* Form elements: Poppins, weight 500 */
+/* Form elements: Poppins, weight 500 for labels/inputs */
 button, input, textarea, select {
   font-family: "Poppins", sans-serif;
   font-weight: 500;
@@ -146,8 +146,7 @@ button, input, textarea, select {
   font-weight: 500;
 }
 
-
-/* Section labels (e.g. WORKSPACES): Poppins, 500, 10px, 0.06em, uppercase */
+/* Section labels: 10px uppercase --text-subtle */
 .section-label {
   font-family: "Poppins", sans-serif;
   font-weight: 500;

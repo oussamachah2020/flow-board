@@ -13,6 +13,7 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   useSortable,
   arrayMove,
 } from "@dnd-kit/sortable";
@@ -186,6 +187,56 @@ function DroppableColumn({
   );
 }
 
+function SortableColumn({
+  column,
+  isOverDropTarget,
+  children,
+}: {
+  column: BoardColumn;
+  isOverDropTarget?: boolean;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: column.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  const childArray = React.Children.toArray(children);
+  const [header, ...rest] = childArray;
+  const headerWithListeners =
+    header && React.isValidElement(header)
+      ? React.cloneElement(header as React.ReactElement<Record<string, unknown>>, {
+          ...attributes,
+          ...listeners,
+        })
+      : header;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex w-[280px] shrink-0 flex-col rounded-[8px] border-2 bg-[var(--bg-subtle)] transition-colors duration-150 ${
+        isOverDropTarget
+          ? "border-[var(--accent)] bg-[var(--surface-hover)] shadow-md"
+          : "border-[var(--border)]"
+      }`}
+    >
+      {headerWithListeners}
+      {rest}
+    </div>
+  );
+}
+
 function AddTaskInline({
   columnId,
   workspaceId,
@@ -256,69 +307,115 @@ function AddTaskInline({
           if (e.key === "Escape") onDone();
         }}
         placeholder="Task title"
-        className="mb-2 h-8 rounded-[6px] border-[var(--border)] bg-[var(--surface)] text-[13px]"
+        className="mb-2  rounded-[6px] border-[var(--border)] bg-[var(--surface)] text-[13px]"
       />
       <div className="flex flex-wrap items-center gap-2">
         <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="h-7 w-auto min-w-0 rounded-[6px] border-[var(--border)] bg-[var(--surface)] px-2 text-[11px]" title="Type">
-              <span className="mr-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: TYPE_COLORS[type] ?? TYPE_COLORS.TASK }} />
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {TASK_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  <span className="flex items-center gap-1.5">
-                    <span className="size-2 rounded-full" style={{ backgroundColor: TYPE_COLORS[t] ?? TYPE_COLORS.TASK }} />
-                    {TASK_TYPE_LABELS[t]}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={priority} onValueChange={(v) => setPriority(v)}>
-            <SelectTrigger className="h-7 w-auto min-w-0 rounded-[6px] border-[var(--border)] bg-[var(--surface)] px-2 text-[11px]" title="Priority">
-              <span className="mr-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[priority] ?? "var(--text-subtle)" }} />
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((p) => (
-                <SelectItem key={p} value={p}>
-                  <span className="flex items-center gap-1.5">
-                    <span className="size-2 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[p] ?? "var(--text-subtle)" }} />
-                    {p}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="ml-auto flex gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => handleSubmit()}
-              disabled={!title.trim() || createMutation.isPending}
-              className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-              aria-label="Confirm"
+          <SelectTrigger
+            className="h-7 w-auto min-w-0 rounded-[6px] border-[var(--border)] bg-[var(--surface)] px-2 text-[11px]"
+            title="Type"
+          >
+            <span
+              className="mr-1.5 size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: TYPE_COLORS[type] ?? TYPE_COLORS.TASK }}
+            />
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            {TASK_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{
+                      backgroundColor: TYPE_COLORS[t] ?? TYPE_COLORS.TASK,
+                    }}
+                  />
+                  {TASK_TYPE_LABELS[t]}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={priority} onValueChange={(v) => setPriority(v)}>
+          <SelectTrigger
+            className="h-7 w-auto min-w-0 rounded-[6px] border-[var(--border)] bg-[var(--surface)] px-2 text-[11px]"
+            title="Priority"
+          >
+            <span
+              className="mr-1.5 size-2 shrink-0 rounded-full"
+              style={{
+                backgroundColor:
+                  PRIORITY_COLORS[priority] ?? "var(--text-subtle)",
+              }}
+            />
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((p) => (
+              <SelectItem key={p} value={p}>
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{
+                      backgroundColor:
+                        PRIORITY_COLORS[p] ?? "var(--text-subtle)",
+                    }}
+                  />
+                  {p}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="ml-auto flex gap-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleSubmit()}
+            disabled={!title.trim() || createMutation.isPending}
+            className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+            aria-label="Confirm"
+          >
+            <svg
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onDone}
-              className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-              aria-label="Cancel"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onDone}
+            className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+            aria-label="Cancel"
+          >
+            <svg
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </Button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </Button>
         </div>
+      </div>
     </div>
   );
 }
@@ -337,6 +434,8 @@ export default function BoardPage() {
   const [editingColumnName, setEditingColumnName] = React.useState("");
   const [deleteColumnId, setDeleteColumnId] = React.useState<string | null>(null);
   const [activeTask, setActiveTask] = React.useState<Task | null>(null);
+  const [activeColumn, setActiveColumn] = React.useState<BoardColumn | null>(null);
+  const [overColumnId, setOverColumnId] = React.useState<string | null>(null);
   const [localColumns, setLocalColumns] = React.useState<Record<string, Task[]>>({});
 
   const { data: boardRaw, isLoading: boardLoading } = useQuery({
@@ -603,6 +702,38 @@ export default function BoardPage() {
     },
   });
 
+  const reorderColumnsMutation = useMutation({
+    mutationFn: (body: { columns: Array<{ id: string; order: number }> }) =>
+      boardColumnApi
+        .reorderColumns(board!.workspaceId, board!.id, body)
+        .then((r) => r.data),
+    onMutate: async (variables) => {
+      const queryKey = ["board", boardId] as const;
+      const previousBoard = queryClient.getQueryData<Board>(queryKey);
+      if (!previousBoard?.columns?.length) return { previousBoard };
+      const reorderedColumns = variables.columns
+        .map(({ id, order }) => {
+          const col = previousBoard.columns!.find((c) => c.id === id);
+          return col ? { ...col, order } : null;
+        })
+        .filter(Boolean) as BoardColumn[];
+      queryClient.setQueryData<Board>(queryKey, {
+        ...previousBoard,
+        columns: reorderedColumns,
+      });
+      return { previousBoard };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousBoard != null) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+      }
+      toast.error("Failed to reorder columns");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+    },
+  });
+
   function handleAddColumnSubmit() {
     const name = newColumnName.trim();
     if (!name) {
@@ -630,11 +761,24 @@ export default function BoardPage() {
   }
 
   const handleDragStart = (event: DragStartEvent) => {
+    setOverColumnId(null);
+    const columnIds = (board?.columns ?? []).map((c) => c.id);
+    if (columnIds.includes(event.active.id as string)) {
+      const col = (board?.columns ?? []).find((c) => c.id === event.active.id);
+      if (col) setActiveColumn(col);
+      return;
+    }
     const task = allTasks.find((t) => t.id === event.active.id);
     if (task) setActiveTask(task);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
+    const columnIds = (board?.columns ?? []).map((c) => c.id);
+    if (columnIds.includes(event.active.id as string)) {
+      const overId = event.over?.id as string | undefined;
+      setOverColumnId(overId && columnIds.includes(overId) ? overId : null);
+      return;
+    }
     const { active, over } = event;
     if (!over) return;
     const activeTaskId = active.id as string;
@@ -666,13 +810,26 @@ export default function BoardPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
+    setActiveColumn(null);
+    setOverColumnId(null);
+    const columnIds = (board?.columns ?? []).map((c) => c.id);
+    if (columnIds.includes(active.id as string) && over && columnIds.includes(over.id as string)) {
+      const fromIndex = (board?.columns ?? []).findIndex((c) => c.id === active.id);
+      const toIndex = (board?.columns ?? []).findIndex((c) => c.id === over.id);
+      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex && board) {
+        const reordered = arrayMove(board.columns ?? [], fromIndex, toIndex);
+        reorderColumnsMutation.mutate({
+          columns: reordered.map((c, i) => ({ id: c.id, order: i })),
+        });
+      }
+      return;
+    }
     if (!over) return;
     const activeTaskId = active.id as string;
     const overId = over.id as string;
     const activeColumnId = Object.keys(localColumns).find((colId) =>
       localColumns[colId].some((t) => t.id === activeTaskId)
     );
-    const columnIds = columns.map((c) => c.id);
     const overColumnId = columnIds.includes(overId)
       ? overId
       : Object.keys(localColumns).find((colId) =>
@@ -714,21 +871,28 @@ export default function BoardPage() {
   const loading = boardLoading;
   const members = workspace?.members ?? [];
 
+  const filterTriggerBase =
+    "flex h-9 items-center gap-2 rounded-[6px] border px-3.5 text-[13px] font-medium transition-colors duration-150";
   function filterTriggerClass(active: boolean) {
     return active
-      ? "border-[var(--border-hover)] bg-[var(--surface-hover)] text-[var(--text)]"
-      : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]";
+      ? "border-[var(--border)] bg-[var(--surface-hover)] text-[var(--text)]"
+      : "border-[var(--border-muted)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]";
   }
 
   if (!board && !loading) {
     return (
       <div className="flex min-h-full items-center justify-center p-8">
         <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] py-12 text-center">
-          <p className="text-[13px] text-[var(--text-muted)]">Board not found or you don’t have access.</p>
-          <Button asChild variant="outline" className="mt-4 h-[34px] rounded-[6px] border-[var(--border)] hover:bg-[var(--surface-hover)]">
+          <p className="text-[13px] text-[var(--text-muted)]">
+            Board not found or you don’t have access.
+          </p>
+          <Button
+            asChild
+            variant="outline"
+            className="mt-4  rounded-[6px] border-[var(--border)] hover:bg-[var(--surface-hover)]"
+          >
             <Link to="/dashboard">Back to Dashboard</Link>
           </Button>
-
         </div>
       </div>
     );
@@ -765,15 +929,12 @@ export default function BoardPage() {
         </div>
       </header>
 
-      {/* Filter bar */}
-      <div
-        className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--border-muted)] bg-[var(--bg)] px-6 py-3"
-        style={{ padding: "12px 24px" }}
-      >
-        <div className="flex items-center gap-1.5">
-          <div className="flex h-7 min-w-[160px] max-w-[240px] items-center gap-2 rounded-[5px] border border-[var(--border)] bg-[var(--surface)] px-2.5">
+      <div className="flex shrink-0 items-center justify-between gap-6 border-b border-[var(--border-muted)] bg-[var(--bg)] px-6 py-3">
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <div className="relative flex items-center w-[240px]">
             <svg
-              className="size-3.5 shrink-0 text-[var(--text-subtle)]"
+              className="absolute left-3.5 size-4 shrink-0 text-[var(--text-subtle)] pointer-events-none"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -808,15 +969,17 @@ export default function BoardPage() {
                 }
               }}
               placeholder="Search tasks..."
-              className="h-5 min-w-0 flex-1 border-0 bg-transparent p-0 text-[12px] text-[var(--text)] placeholder:text-[var(--text-subtle)] focus-visible:ring-0"
+              className="h-9 rounded-[6px] pl-10 text-[13px] bg-[var(--surface)] border-[var(--border-muted)] placeholder:text-[var(--text-subtle)] transition-colors duration-150 hover:border-[var(--border)] focus-visible:ring-1 focus-visible:ring-[var(--border)]"
               aria-label="Search tasks"
             />
           </div>
+
+          {/* Assignee */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className={`flex h-7 items-center gap-1.5 rounded-[5px] border px-2.5 text-[12px] ${filterTriggerClass(!!filters.assigneeId)}`}
+                className={`${filterTriggerBase} ${filterTriggerClass(!!filters.assigneeId)}`}
               >
                 Assignee {filters.assigneeId ? "· 1" : "▾"}
               </button>
@@ -827,9 +990,7 @@ export default function BoardPage() {
             >
               {members.map((member) => {
                 const name =
-                  member.user?.profile?.name ??
-                  member.user?.email ??
-                  "Unknown";
+                  member.user?.profile?.name ?? member.user?.email ?? "Unknown";
                 const isChecked = filters.assigneeId === member.userId;
                 return (
                   <button
@@ -857,13 +1018,16 @@ export default function BoardPage() {
               })}
             </PopoverContent>
           </Popover>
+
+          {/* Priority */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className={`flex h-7 items-center gap-1.5 rounded-[5px] border px-2.5 text-[12px] ${filterTriggerClass(filters.priority.length > 0)}`}
+                className={`${filterTriggerBase} ${filterTriggerClass(filters.priority.length > 0)}`}
               >
-                Priority {filters.priority.length ? `· ${filters.priority.length}` : "▾"}
+                Priority{" "}
+                {filters.priority.length ? `· ${filters.priority.length}` : "▾"}
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -872,7 +1036,7 @@ export default function BoardPage() {
             >
               {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((p) => {
                 const isChecked = filters.priority.includes(p);
-                const dotColor = PRIORITY_COLORS[p] ?? "#555555";
+                const dotColor = PRIORITY_COLORS[p] ?? "var(--text-subtle)";
                 return (
                   <button
                     key={p}
@@ -886,7 +1050,9 @@ export default function BoardPage() {
                           ? current.filter((x) => x !== p)
                           : [...current, p];
                         next.delete("priority");
-                        nextPriorities.forEach((v) => next.append("priority", v));
+                        nextPriorities.forEach((v) =>
+                          next.append("priority", v),
+                        );
                         return next;
                       });
                     }}
@@ -902,11 +1068,13 @@ export default function BoardPage() {
               })}
             </PopoverContent>
           </Popover>
+
+          {/* Type */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className={`flex h-7 items-center gap-1.5 rounded-[5px] border px-2.5 text-[12px] ${filterTriggerClass(filters.type.length > 0)}`}
+                className={`${filterTriggerBase} ${filterTriggerClass(filters.type.length > 0)}`}
               >
                 Type {filters.type.length ? `· ${filters.type.length}` : "▾"}
               </button>
@@ -947,11 +1115,13 @@ export default function BoardPage() {
               })}
             </PopoverContent>
           </Popover>
+
+          {/* Due date */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className={`flex h-7 items-center gap-1.5 rounded-[5px] border px-2.5 text-[12px] ${filterTriggerClass(!!filters.due)}`}
+                className={`${filterTriggerBase} ${filterTriggerClass(!!filters.due)}`}
               >
                 Due date {filters.due ? "· 1" : "▾"}
               </button>
@@ -984,7 +1154,9 @@ export default function BoardPage() {
                       className="size-[14px] shrink-0 rounded-full border border-[var(--border)]"
                       style={{
                         borderWidth: isChecked ? 4 : 1,
-                        backgroundColor: isChecked ? "var(--accent)" : "transparent",
+                        backgroundColor: isChecked
+                          ? "var(--accent)"
+                          : "transparent",
                       }}
                     />
                     {label}
@@ -993,13 +1165,16 @@ export default function BoardPage() {
               })}
             </PopoverContent>
           </Popover>
+
+          {/* Column */}
           <Popover>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className={`flex h-7 items-center gap-1.5 rounded-[5px] border px-2.5 text-[12px] ${filterTriggerClass(filters.columnId.length > 0)}`}
+                className={`${filterTriggerBase} ${filterTriggerClass(filters.columnId.length > 0)}`}
               >
-                Column {filters.columnId.length ? `· ${filters.columnId.length}` : "▾"}
+                Column{" "}
+                {filters.columnId.length ? `· ${filters.columnId.length}` : "▾"}
               </button>
             </PopoverTrigger>
             <PopoverContent
@@ -1034,7 +1209,9 @@ export default function BoardPage() {
             </PopoverContent>
           </Popover>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Right side — count + clear */}
+        <div className="flex items-center gap-3">
           {hasActiveFilters && (
             <>
               <span className="font-mono text-[11px] text-[var(--text-subtle)]">
@@ -1043,7 +1220,7 @@ export default function BoardPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="h-auto p-0 text-[12px] text-[var(--text-subtle)] hover:text-[var(--red)]"
+                className="h-auto p-0 text-[12px] text-[var(--text-subtle)] hover:bg-transparent hover:text-[var(--red)]"
                 onClick={() => {
                   setSearchParams((prev) => {
                     const next = new URLSearchParams(prev);
@@ -1069,7 +1246,10 @@ export default function BoardPage() {
         {tasksLoading && columns.length > 0 ? (
           <div className="flex gap-3">
             {columns.map((col) => (
-              <Skeleton key={col.id} className="h-64 w-[280px] shrink-0 rounded-[8px]" />
+              <Skeleton
+                key={col.id}
+                className="h-64 w-[280px] shrink-0 rounded-[8px]"
+              />
             ))}
           </div>
         ) : columns.length === 0 && !addingColumn ? (
@@ -1092,7 +1272,7 @@ export default function BoardPage() {
               Create your first column to start organizing tasks
             </p>
             <Button
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
               onClick={handleStartAddColumn}
             >
               Add Column
@@ -1107,231 +1287,350 @@ export default function BoardPage() {
             onDragEnd={handleDragEnd}
           >
             <div className="flex gap-3">
-              {columns.map((column) => {
-                const columnTasks = (localColumns[column.id] ?? []).slice().sort((a, b) => a.order - b.order);
-                const isEditing = editingColumnId === column.id;
-                return (
-                  <div
-                    key={column.id}
-                    className="flex w-[280px] shrink-0 flex-col rounded-[8px] border border-[var(--border)] bg-[var(--bg-subtle)]"
-                  >
-                    <div className="flex items-center justify-between gap-2 border-b border-[var(--border-muted)] px-3 py-2">
+              <SortableContext
+                items={columns.map((c) => c.id)}
+                strategy={horizontalListSortingStrategy}
+              >
+                {columns.map((column) => {
+                  const columnTasks = (localColumns[column.id] ?? [])
+                    .slice()
+                    .sort((a, b) => a.order - b.order);
+                  const isEditing = editingColumnId === column.id;
+                  return (
+                    <SortableColumn
+                      key={column.id}
+                      column={column}
+                      isOverDropTarget={
+                        activeColumn !== null && overColumnId === column.id
+                      }
+                    >
+                      <div className="flex cursor-grab active:cursor-grabbing items-center justify-between gap-2 border-b border-[var(--border-muted)] px-3 py-2">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
                         {isEditing ? (
-                        <>
-                          <Input
-                            type="text"
-                            value={editingColumnName}
-                            onChange={(e) => setEditingColumnName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                const name = editingColumnName.trim();
-                                if (name && name.length <= 50) renameColumnMutation.mutate({ columnId: column.id, name });
+                          <>
+                            <Input
+                              type="text"
+                              value={editingColumnName}
+                              onChange={(e) =>
+                                setEditingColumnName(e.target.value)
                               }
-                              if (e.key === "Escape") {
-                                setEditingColumnId(null);
-                                setEditingColumnName("");
-                              }
-                            }}
-                            className="min-w-0 flex-1 rounded-[6px] border-[var(--border)] bg-[var(--surface)] py-1 text-[13px]"
-                            autoFocus
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              const name = editingColumnName.trim();
-                              if (name && name.length <= 50) renameColumnMutation.mutate({ columnId: column.id, name });
-                            }}
-                            disabled={!editingColumnName.trim() || editingColumnName.trim().length > 50 || renameColumnMutation.isPending}
-                            className="size-8 shrink-0 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                            aria-label="Confirm"
-                          >
-                            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => { setEditingColumnId(null); setEditingColumnName(""); }}
-                            className="size-8 shrink-0 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                            aria-label="Cancel"
-                          >
-                            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <h3 className="truncate text-[13px] font-normal text-[var(--text)]">
-                            {column.name}
-                          </h3>
-                          <span className="shrink-0 font-mono text-[11px] text-[var(--text-subtle)]">
-                            {columnTasks.length}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {!isEditing && (
-                      <div className="flex shrink-0 items-center gap-0.5">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                          onClick={() => setAddTaskColumnId(column.id)}
-                          aria-label="Add task"
-                        >
-                          <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  const name = editingColumnName.trim();
+                                  if (name && name.length <= 50)
+                                    renameColumnMutation.mutate({
+                                      columnId: column.id,
+                                      name,
+                                    });
+                                }
+                                if (e.key === "Escape") {
+                                  setEditingColumnId(null);
+                                  setEditingColumnName("");
+                                }
+                              }}
+                              className="min-w-0 flex-1 rounded-[6px] border-[var(--border)] bg-[var(--surface)] py-1 text-[13px]"
+                              autoFocus
+                            />
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                              aria-label="Column menu"
+                              onClick={() => {
+                                const name = editingColumnName.trim();
+                                if (name && name.length <= 50)
+                                  renameColumnMutation.mutate({
+                                    columnId: column.id,
+                                    name,
+                                  });
+                              }}
+                              disabled={
+                                !editingColumnName.trim() ||
+                                editingColumnName.trim().length > 50 ||
+                                renameColumnMutation.isPending
+                              }
+                              className="size-8 shrink-0 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                              aria-label="Confirm"
                             >
-                              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
+                              <svg
+                                className="size-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="min-w-[120px] border-[var(--border)] bg-[var(--surface)]"
-                          >
-                            <DropdownMenuItem
-                              className="text-[var(--text)] focus:bg-[var(--surface-hover)]"
-                              onSelect={() => handleStartRename(column)}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingColumnId(null);
+                                setEditingColumnName("");
+                              }}
+                              className="size-8 shrink-0 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                              aria-label="Cancel"
                             >
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-[var(--red)] focus:bg-[var(--surface-hover)]"
-                              onSelect={() => setDeleteColumnId(column.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <svg
+                                className="size-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <h3 className="truncate text-[13px] font-normal text-[var(--text)]">
+                              {column.name}
+                            </h3>
+                            <span className="shrink-0 font-mono text-[11px] text-[var(--text-subtle)]">
+                              {columnTasks.length}
+                            </span>
+                          </>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <DroppableColumn
-                    id={column.id}
-                    className="flex flex-col gap-1.5 overflow-y-auto p-3"
-                  >
-                    {addTaskColumnId === column.id && board && (
-                      <AddTaskInline
-                        columnId={column.id}
-                        workspaceId={board.workspaceId}
-                        boardId={board.id}
-                        onDone={() => setAddTaskColumnId(null)}
-                      />
-                    )}
-                    {columnTasks.length === 0 && addTaskColumnId !== column.id ? (
-                      <p className="py-6 text-center font-mono text-[11px] text-[var(--text-subtle)]">
-                        No tasks
-                      </p>
-                    ) : (
-                      <SortableContext
-                        items={columnTasks.map((t) => t.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {columnTasks.map((task) => (
-                          <SortableTaskCard
-                            key={task.id}
-                            task={task}
-                            onClick={() => openTask(task.id)}
-                          />
-                        ))}
-                      </SortableContext>
-                    )}
-                  </DroppableColumn>
-                </div>
-              );
-            })}
-            {addingColumn && board && (
-              <div className="flex w-[280px] shrink-0 flex-col rounded-[8px] border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
-                <Input
-                  type="text"
-                  value={newColumnName}
-                  onChange={(e) => {
-                    setNewColumnName(e.target.value);
-                    setNewColumnError("");
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddColumnSubmit();
-                    if (e.key === "Escape") {
-                      setAddingColumn(false);
-                      setNewColumnName("");
-                      setNewColumnError("");
-                    }
-                  }}
-                  placeholder="Column name"
-                  className="rounded-[6px] border-[var(--border)] bg-[var(--surface)] text-[13px]"
-                  autoFocus
-                />
-                {newColumnError && (
-                  <p className="mt-1 text-[12px] text-[var(--red)]">{newColumnError}</p>
-                )}
-                <div className="mt-2 flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleAddColumnSubmit}
-                    disabled={createColumnMutation.isPending}
-                    className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                    aria-label="Confirm"
-                  >
-                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setAddingColumn(false);
-                      setNewColumnName("");
+                      {!isEditing && (
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                            onClick={() => setAddTaskColumnId(column.id)}
+                            aria-label="Add task"
+                          >
+                            <svg
+                              className="size-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                              />
+                            </svg>
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                                aria-label="Column menu"
+                              >
+                                <svg
+                                  className="size-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 5v.01M12 12v.01M12 19v.01"
+                                  />
+                                </svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="start"
+                              className="min-w-[120px] border-[var(--border)] bg-[var(--surface)]"
+                            >
+                              <DropdownMenuItem
+                                className="text-[var(--text)] focus:bg-[var(--surface-hover)]"
+                                onSelect={() => handleStartRename(column)}
+                              >
+                                Rename
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-[var(--red)] focus:bg-[var(--surface-hover)]"
+                                onSelect={() => setDeleteColumnId(column.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      )}
+                    </div>
+                    <DroppableColumn
+                      id={column.id}
+                      className="flex flex-col gap-1.5 overflow-y-auto p-3"
+                    >
+                      {addTaskColumnId === column.id && board && (
+                        <AddTaskInline
+                          columnId={column.id}
+                          workspaceId={board.workspaceId}
+                          boardId={board.id}
+                          onDone={() => setAddTaskColumnId(null)}
+                        />
+                      )}
+                      {columnTasks.length === 0 &&
+                      addTaskColumnId !== column.id ? (
+                        <p className="py-6 text-center font-mono text-[11px] text-[var(--text-subtle)]">
+                          No tasks
+                        </p>
+                      ) : (
+                        <SortableContext
+                          items={columnTasks.map((t) => t.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {columnTasks.map((task) => (
+                            <SortableTaskCard
+                              key={task.id}
+                              task={task}
+                              onClick={() => openTask(task.id)}
+                            />
+                          ))}
+                        </SortableContext>
+                      )}
+                    </DroppableColumn>
+                    </SortableColumn>
+                  );
+                })}
+              </SortableContext>
+              {addingColumn && board && (
+                <div className="flex w-[280px] shrink-0 flex-col rounded-[8px] border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
+                  <Input
+                    type="text"
+                    value={newColumnName}
+                    onChange={(e) => {
+                      setNewColumnName(e.target.value);
                       setNewColumnError("");
                     }}
-                    className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-                    aria-label="Cancel"
-                  >
-                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </Button>
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleAddColumnSubmit();
+                      if (e.key === "Escape") {
+                        setAddingColumn(false);
+                        setNewColumnName("");
+                        setNewColumnError("");
+                      }
+                    }}
+                    placeholder="Column name"
+                    className="rounded-[6px] border-[var(--border)] bg-[var(--surface)] text-[13px]"
+                    autoFocus
+                  />
+                  {newColumnError && (
+                    <p className="mt-1 text-[12px] text-[var(--red)]">
+                      {newColumnError}
+                    </p>
+                  )}
+                  <div className="mt-2 flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleAddColumnSubmit}
+                      disabled={createColumnMutation.isPending}
+                      className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                      aria-label="Confirm"
+                    >
+                      <svg
+                        className="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setAddingColumn(false);
+                        setNewColumnName("");
+                        setNewColumnError("");
+                      }}
+                      className="size-8 rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                      aria-label="Cancel"
+                    >
+                      <svg
+                        className="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-            {columns.length > 0 && !addingColumn && board && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleStartAddColumn}
-                className="flex h-[40px] w-[200px] shrink-0 items-center justify-center gap-2 self-start rounded-[8px] border border-dashed border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text)]"
-              >
-                <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add column
-              </Button>
-            )}
+              )}
+              {columns.length > 0 && !addingColumn && board && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleStartAddColumn}
+                  className="flex h-[40px] w-[200px] shrink-0 items-center justify-center gap-2 self-start rounded-[8px] border border-dashed border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text)]"
+                >
+                  <svg
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add column
+                </Button>
+              )}
             </div>
             <DragOverlay>
-              {activeTask ? (
+              {activeColumn ? (
+                <div
+                  className="flex w-[280px] shrink-0 flex-col rounded-[8px] border border-[var(--border)] bg-[var(--bg-subtle)] shadow-lg"
+                  style={{
+                    transform: "rotate(1.5deg)",
+                    opacity: 0.95,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-[var(--border-muted)] px-3 py-2">
+                    <h3 className="truncate text-[13px] font-normal text-[var(--text)]">
+                      {activeColumn.name}
+                    </h3>
+                  </div>
+                  <div className="p-3">
+                    <p className="py-4 text-center font-mono text-[11px] text-[var(--text-subtle)]">
+                      Moving column…
+                    </p>
+                  </div>
+                </div>
+              ) : activeTask ? (
                 <div
                   style={{
                     transform: "rotate(1.5deg)",
@@ -1348,27 +1647,33 @@ export default function BoardPage() {
       </div>
 
       {board && deleteColumnId && (
-        <Dialog open={!!deleteColumnId} onOpenChange={(open) => !open && setDeleteColumnId(null)}>
+        <Dialog
+          open={!!deleteColumnId}
+          onOpenChange={(open) => !open && setDeleteColumnId(null)}
+        >
           <DialogContent className="border-[var(--border)] bg-[var(--surface)] text-[var(--text)]">
             <DialogHeader>
               <DialogTitle className="text-[18px] font-normal">
                 Delete column?
               </DialogTitle>
               <p className="text-[13px] text-[var(--text-muted)]">
-                This will block deletion if tasks exist. Move or delete tasks first.
+                This will block deletion if tasks exist. Move or delete tasks
+                first.
               </p>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:gap-0">
               <Button
                 variant="outline"
-                className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                className=" rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
                 onClick={() => setDeleteColumnId(null)}
               >
                 Cancel
               </Button>
               <Button
-                className="h-[34px] rounded-[6px] border border-[var(--red)] bg-transparent text-[var(--red)] hover:bg-[var(--red)]/10"
-                onClick={() => deleteColumnId && deleteColumnMutation.mutate(deleteColumnId)}
+                className=" rounded-[6px] border border-[var(--red)] bg-transparent text-[var(--red)] hover:bg-[var(--red)]/10"
+                onClick={() =>
+                  deleteColumnId && deleteColumnMutation.mutate(deleteColumnId)
+                }
                 disabled={deleteColumnMutation.isPending}
               >
                 {deleteColumnMutation.isPending ? "Deleting…" : "Delete column"}

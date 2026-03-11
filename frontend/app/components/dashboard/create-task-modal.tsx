@@ -1,8 +1,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +15,11 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,15 +32,36 @@ import type { Board, BoardColumn, Workspace } from "~/types/workspace";
 import { taskApi } from "~/lib/task-api";
 import { workspaceApi } from "~/lib/workspace-api";
 
-const TASK_TYPES = ["TASK", "BUG"] as const;
+const TASK_TYPES = [
+  "TASK",
+  "BUG",
+  "HOTFIX",
+  "FEATURE",
+  "IMPROVEMENT",
+  "TEST",
+] as const;
 const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+
+const PRIORITY_COLORS: Record<string, string> = {
+  LOW: "#555555",
+  MEDIUM: "#4d7fe5",
+  HIGH: "#e5a029",
+  URGENT: "#e54d4d",
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  TASK: "#444444",
+  BUG: "#e54d4d",
+  HOTFIX: "#e5a029",
+  FEATURE: "#4d7fe5",
+  IMPROVEMENT: "#4de57a",
+  TEST: "#a855f7",
+};
 
 export interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Optional: preselect this workspace id */
   defaultWorkspaceId?: string;
-  /** Optional: preselect this board id */
   defaultBoardId?: string;
 }
 
@@ -43,14 +72,17 @@ export function CreateTaskModal({
   defaultBoardId,
 }: CreateTaskModalProps) {
   const queryClient = useQueryClient();
-  const [workspaceId, setWorkspaceId] = React.useState<string>(defaultWorkspaceId ?? "");
+  const [workspaceId, setWorkspaceId] = React.useState<string>(
+    defaultWorkspaceId ?? "",
+  );
   const [boardId, setBoardId] = React.useState<string>(defaultBoardId ?? "");
   const [columnId, setColumnId] = React.useState<string>("");
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [type, setType] = React.useState<string>("TASK");
   const [priority, setPriority] = React.useState<string>("MEDIUM");
-  const [dueDate, setDueDate] = React.useState("");
+  const [dueDate, setDueDate] = React.useState<Date | undefined>(undefined);
+  const [dueDateOpen, setDueDateOpen] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const { data: workspaces } = useQuery({
@@ -79,10 +111,9 @@ export function CreateTaskModal({
     if (res) boardsByWorkspace[ws.id] = res;
   });
 
-  const boards = workspaceId ? boardsByWorkspace[workspaceId] ?? [] : [];
+  const boards = workspaceId ? (boardsByWorkspace[workspaceId] ?? []) : [];
   const columns: BoardColumn[] = board?.columns ?? [];
 
-  // When modal opens or workspaces load, set default workspace/board
   React.useEffect(() => {
     if (!open) return;
     const first = workspaces?.[0];
@@ -127,7 +158,7 @@ export function CreateTaskModal({
           description: description.trim() || undefined,
           type: type || undefined,
           priority: priority || undefined,
-          dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+          dueDate: dueDate ? dueDate.toISOString() : undefined,
         })
         .then((r) => r.data),
     onSuccess: () => {
@@ -146,7 +177,7 @@ export function CreateTaskModal({
       setSubmitError(
         res?.data?.message && typeof res.data.message === "string"
           ? res.data.message
-          : "Failed to create task"
+          : "Failed to create task",
       );
     },
   });
@@ -156,7 +187,7 @@ export function CreateTaskModal({
     setDescription("");
     setType("TASK");
     setPriority("MEDIUM");
-    setDueDate("");
+    setDueDate(undefined);
     setSubmitError(null);
   }
 
@@ -180,51 +211,84 @@ export function CreateTaskModal({
   }
 
   const canSubmit =
-    !!title.trim() && !!workspaceId && !!boardId && !!columnId && !createMutation.isPending;
+    !!title.trim() &&
+    !!workspaceId &&
+    !!boardId &&
+    !!columnId &&
+    !createMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="border-[var(--border)] bg-[var(--surface)] text-[var(--text)] max-w-md"
+        className="max-w-md border-[var(--border)] bg-[var(--surface)] text-[var(--text)]"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold tracking-[-0.01em]">
+          <DialogTitle className="text-[15px] font-medium tracking-[-0.01em]">
             Create task
           </DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="task-workspace" className="text-[var(--text-muted)]">
+          {/* Workspace + Board */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="task-workspace"
+                className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+              >
                 Workspace
               </Label>
-              <Select value={workspaceId || "__none__"} onValueChange={(v) => setWorkspaceId(v === "__none__" ? "" : v)}>
-                <SelectTrigger id="task-workspace" className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]">
+              <Select
+                value={workspaceId || "__none__"}
+                onValueChange={(v) => setWorkspaceId(v === "__none__" ? "" : v)}
+              >
+                <SelectTrigger
+                  id="task-workspace"
+                  className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[12px] font-light"
+                >
                   <SelectValue placeholder="Select workspace" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Select workspace</SelectItem>
+                <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
+                  <SelectItem value="__none__" className="text-[12px]">
+                    Select workspace
+                  </SelectItem>
                   {(workspaces ?? []).map((ws: Workspace) => (
-                    <SelectItem key={ws.id} value={ws.id}>
+                    <SelectItem
+                      key={ws.id}
+                      value={ws.id}
+                      className="text-[12px]"
+                    >
                       {ws.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="task-board" className="text-[var(--text-muted)]">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="task-board"
+                className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+              >
                 Board
               </Label>
-              <Select value={boardId || "__none__"} onValueChange={(v) => setBoardId(v === "__none__" ? "" : v)}>
-                <SelectTrigger id="task-board" className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]" disabled={!workspaceId || boards.length === 0}>
+              <Select
+                value={boardId || "__none__"}
+                onValueChange={(v) => setBoardId(v === "__none__" ? "" : v)}
+              >
+                <SelectTrigger
+                  id="task-board"
+                  className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[12px] font-light"
+                  disabled={!workspaceId || boards.length === 0}
+                >
                   <SelectValue placeholder="Select board" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Select board</SelectItem>
+                <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
+                  <SelectItem value="__none__" className="text-[12px]">
+                    Select board
+                  </SelectItem>
                   {boards.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
+                    <SelectItem key={b.id} value={b.id} className="text-[12px]">
                       {b.name}
                     </SelectItem>
                   ))}
@@ -233,18 +297,35 @@ export function CreateTaskModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-column" className="text-[var(--text-muted)]">
+          {/* Column */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="task-column"
+              className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+            >
               Column
             </Label>
-            <Select value={columnId || "__none__"} onValueChange={(v) => setColumnId(v === "__none__" ? "" : v)}>
-              <SelectTrigger id="task-column" className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]" disabled={!boardId || columns.length === 0}>
+            <Select
+              value={columnId || "__none__"}
+              onValueChange={(v) => setColumnId(v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger
+                id="task-column"
+                className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[12px] font-light"
+                disabled={!boardId || columns.length === 0}
+              >
                 <SelectValue placeholder="Select column" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Select column</SelectItem>
+              <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
+                <SelectItem value="__none__" className="text-[12px]">
+                  Select column
+                </SelectItem>
                 {columns.map((col) => (
-                  <SelectItem key={col.id} value={col.id}>
+                  <SelectItem
+                    key={col.id}
+                    value={col.id}
+                    className="text-[12px]"
+                  >
                     {col.name}
                   </SelectItem>
                 ))}
@@ -252,8 +333,12 @@ export function CreateTaskModal({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-title" className="text-[var(--text-muted)]">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="task-title"
+              className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+            >
               Title <span className="text-[var(--red)]">*</span>
             </Label>
             <Input
@@ -261,14 +346,24 @@ export function CreateTaskModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task title"
-              className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]"
+              className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[13px] font-light"
               autoFocus
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-desc" className="text-[var(--text-muted)]">
-              Description (optional)
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="task-desc"
+              className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+            >
+              Description{" "}
+              <span
+                className="text-[var(--text-subtle)] normal-case"
+                style={{ letterSpacing: 0 }}
+              >
+                (optional)
+              </span>
             </Label>
             <Textarea
               id="task-desc"
@@ -276,40 +371,89 @@ export function CreateTaskModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details..."
               rows={2}
-              className="rounded-[6px] border-[var(--border)] bg-[var(--surface)] min-h-0"
+              className="min-h-0 resize-none rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[13px] font-light"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="task-type" className="text-[var(--text-muted)]">
+          {/* Type + Priority */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="task-type"
+                className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+              >
                 Type
               </Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="task-type" className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]">
-                  <SelectValue placeholder="Type" />
+                <SelectTrigger
+                  id="task-type"
+                  className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[12px] font-light"
+                >
+                  <SelectValue placeholder="Type">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-3 w-0.5 shrink-0 rounded-full"
+                        style={{
+                          background: TYPE_COLORS[type] ?? TYPE_COLORS.TASK,
+                        }}
+                      />
+                      {type}
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
                   {TASK_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
+                    <SelectItem key={t} value={t} className="text-[12px]">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="h-3 w-0.5 shrink-0 rounded-full"
+                          style={{
+                            background: TYPE_COLORS[t] ?? TYPE_COLORS.TASK,
+                          }}
+                        />
+                        {t}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="task-priority" className="text-[var(--text-muted)]">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="task-priority"
+                className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]"
+              >
                 Priority
               </Label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger id="task-priority" className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]">
-                  <SelectValue placeholder="Priority" />
+                <SelectTrigger
+                  id="task-priority"
+                  className=" rounded-md border-[var(--border)] bg-[var(--bg-subtle)] text-[12px] font-light"
+                >
+                  <SelectValue placeholder="Priority">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="size-2 shrink-0 rounded-full"
+                        style={{
+                          background: PRIORITY_COLORS[priority] ?? "#555555",
+                        }}
+                      />
+                      {priority}
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
                   {TASK_PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
+                    <SelectItem key={p} value={p} className="text-[12px]">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{
+                            background: PRIORITY_COLORS[p] ?? "#555555",
+                          }}
+                        />
+                        {p}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -317,28 +461,78 @@ export function CreateTaskModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-due" className="text-[var(--text-muted)]">
-              Due date (optional)
+          {/* Due date */}
+          <div className="space-y-1.5">
+            <Label className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-subtle)]">
+              Due date{" "}
+              <span
+                className="text-[var(--text-subtle)] normal-case"
+                style={{ letterSpacing: 0 }}
+              >
+                (optional)
+              </span>
             </Label>
-            <Input
-              id="task-due"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="rounded-[6px] border-[var(--border)] bg-[var(--surface)]"
-            />
+            <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className=" w-full justify-start rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] px-3 text-[12px] font-light text-[var(--text)] hover:bg-[var(--surface-hover)]"
+                >
+                  <CalendarIcon className="mr-2 size-3 shrink-0 text-[var(--text-subtle)]" />
+                  {dueDate ? (
+                    format(dueDate, "MMM d, yyyy")
+                  ) : (
+                    <span className="text-[var(--text-subtle)]">
+                      No due date
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto border-[var(--border)] bg-[var(--surface)] p-0"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={(date) => {
+                    setDueDate(date);
+                    setDueDateOpen(false);
+                  }}
+                  initialFocus
+                />
+                {dueDate && (
+                  <div className="border-t border-[var(--border-muted)] p-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-[12px] text-[var(--text-muted)] hover:bg-transparent hover:text-[var(--red)]"
+                      onClick={() => {
+                        setDueDate(undefined);
+                        setDueDateOpen(false);
+                      }}
+                    >
+                      Clear date
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
 
           {submitError && (
-            <p className="text-xs text-[var(--red)]">{submitError}</p>
+            <p className="font-mono text-[11px] text-[var(--red)]">
+              {submitError}
+            </p>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 pt-1 sm:gap-2">
             <Button
               type="button"
               variant="outline"
-              className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className=" rounded-md border-[var(--border)] text-[12px] font-light text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               onClick={() => handleClose(false)}
             >
               Cancel
@@ -346,9 +540,9 @@ export function CreateTaskModal({
             <Button
               type="submit"
               disabled={!canSubmit}
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-md bg-[var(--accent)] px-4 text-[12px] font-medium text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)] disabled:opacity-40"
             >
-              {createMutation.isPending ? "Creating…" : "Create Task"}
+              {createMutation.isPending ? "Creating…" : "Create task"}
             </Button>
           </DialogFooter>
         </form>

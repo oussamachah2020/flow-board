@@ -44,11 +44,16 @@ function TaskRow({ task, board }: { task: Task; board?: Board }) {
         {task.type}
       </span>
       <span className="truncate text-[13px]">{task.title}</span>
-      <span className="truncate text-[12px] text-[var(--text-muted)]">{board?.name ?? "—"}</span>
+      <span className="truncate text-[12px] text-[var(--text-muted)]">
+        {board?.name ?? "—"}
+      </span>
       <span className="flex items-center gap-1.5 font-mono text-[11px]">
         <span
           className="size-1.5 rounded-full"
-          style={{ backgroundColor: PRIORITY_COLORS[task.priority] ?? "#555" }}
+          style={{
+            backgroundColor:
+              PRIORITY_COLORS[task.priority] ?? "var(--text-subtle)",
+          }}
         />
         {task.priority}
       </span>
@@ -118,7 +123,7 @@ export default function MyTasksPage() {
             </p>
           </div>
           <Button
-            className="h-8 rounded-[6px] bg-[var(--accent)] px-3 text-[12px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+            className=" rounded-[6px] bg-[var(--accent)] px-3 text-[12px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
             onClick={() => setCreateTaskModalOpen(true)}
           >
             Create task
@@ -149,7 +154,9 @@ export default function MyTasksPage() {
                 onClick={() => setOverdueOpen((o) => !o)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
-                <span className="text-[13px] font-normal text-[var(--red)]">Overdue</span>
+                <span className="text-[13px] font-normal text-[var(--red)]">
+                  Overdue
+                </span>
                 <span className="font-mono text-[11px] text-[var(--red)]">
                   {(myTasksData?.overdue ?? []).length}
                 </span>
@@ -159,16 +166,27 @@ export default function MyTasksPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
               {overdueOpen && (
                 <div>
                   {(myTasksData?.overdue ?? []).length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">No tasks here</p>
+                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">
+                      No tasks here
+                    </p>
                   ) : (
                     (myTasksData?.overdue ?? []).map((task) => (
-                      <TaskRow key={task.id} task={task} board={getBoard(task.boardId)} />
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        board={getBoard(task.boardId)}
+                      />
                     ))
                   )}
                 </div>
@@ -182,7 +200,9 @@ export default function MyTasksPage() {
                 onClick={() => setDueTodayOpen((o) => !o)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
-                <span className="text-[13px] font-normal text-[var(--amber)]">Due Today</span>
+                <span className="text-[13px] font-normal text-[var(--amber)]">
+                  Due Today
+                </span>
                 <span className="font-mono text-[11px] text-[var(--amber)]">
                   {(myTasksData?.dueToday ?? []).length}
                 </span>
@@ -192,16 +212,27 @@ export default function MyTasksPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
               {dueTodayOpen && (
                 <div>
                   {(myTasksData?.dueToday ?? []).length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">No tasks here</p>
+                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">
+                      No tasks here
+                    </p>
                   ) : (
                     (myTasksData?.dueToday ?? []).map((task) => (
-                      <TaskRow key={task.id} task={task} board={getBoard(task.boardId)} />
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        board={getBoard(task.boardId)}
+                      />
                     ))
                   )}
                 </div>
@@ -215,7 +246,9 @@ export default function MyTasksPage() {
                 onClick={() => setDueThisWeekOpen((o) => !o)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
-                <span className="text-[13px] font-normal text-[var(--blue)]">Due This Week</span>
+                <span className="text-[13px] font-normal text-[var(--blue)]">
+                  Due This Week
+                </span>
                 <span className="font-mono text-[11px] text-[var(--blue)]">
                   {(myTasksData?.dueThisWeek ?? []).length}
                 </span>
@@ -225,16 +258,27 @@ export default function MyTasksPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
               {dueThisWeekOpen && (
                 <div>
                   {(myTasksData?.dueThisWeek ?? []).length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">No tasks here</p>
+                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">
+                      No tasks here
+                    </p>
                   ) : (
                     (myTasksData?.dueThisWeek ?? []).map((task) => (
-                      <TaskRow key={task.id} task={task} board={getBoard(task.boardId)} />
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        board={getBoard(task.boardId)}
+                      />
                     ))
                   )}
                 </div>
@@ -248,7 +292,9 @@ export default function MyTasksPage() {
                 onClick={() => setNoDueDateOpen((o) => !o)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
-                <span className="text-[13px] font-normal text-[var(--text-muted)]">No Due Date</span>
+                <span className="text-[13px] font-normal text-[var(--text-muted)]">
+                  No Due Date
+                </span>
                 <span className="font-mono text-[11px] text-[var(--text-subtle)]">
                   {(myTasksData?.noDueDate ?? []).length}
                 </span>
@@ -258,16 +304,27 @@ export default function MyTasksPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
               {noDueDateOpen && (
                 <div>
                   {(myTasksData?.noDueDate ?? []).length === 0 ? (
-                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">No tasks here</p>
+                    <p className="py-6 text-center text-[13px] text-[var(--text-subtle)]">
+                      No tasks here
+                    </p>
                   ) : (
                     (myTasksData?.noDueDate ?? []).map((task) => (
-                      <TaskRow key={task.id} task={task} board={getBoard(task.boardId)} />
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        board={getBoard(task.boardId)}
+                      />
                     ))
                   )}
                 </div>

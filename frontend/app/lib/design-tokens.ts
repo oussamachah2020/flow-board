@@ -1,16 +1,16 @@
-/** Priority and type colors for tasks — use in UI */
+/** Priority and type colors for tasks — use in inline style (e.g. backgroundColor, borderColor). CSS vars work there. */
 export const PRIORITY_COLORS: Record<string, string> = {
-  LOW: "#555555",
-  MEDIUM: "#4d7fe5",
-  HIGH: "#e5a029",
-  URGENT: "#e54d4d",
+  LOW: "var(--text-subtle)",
+  MEDIUM: "var(--blue)",
+  HIGH: "var(--amber)",
+  URGENT: "var(--red)",
 };
 
 export const TYPE_COLORS: Record<string, string> = {
-  TASK: "#444444",
-  BUG: "#e54d4d",
-  HOTFIX: "#e5a029",
-  FEATURE: "#4d7fe5",
-  IMPROVEMENT: "#4de57a",
-  TEST: "#a855f7",
+  TASK: "var(--text-subtle)",
+  BUG: "var(--red)",
+  HOTFIX: "var(--amber)",
+  FEATURE: "var(--blue)",
+  IMPROVEMENT: "var(--green)",
+  TEST: "var(--purple)",
 };

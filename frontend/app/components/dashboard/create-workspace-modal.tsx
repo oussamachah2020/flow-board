@@ -102,7 +102,10 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="workspace-name" className="text-[var(--text-muted)]">
+                <Label
+                  htmlFor="workspace-name"
+                  className="text-[var(--text-muted)]"
+                >
                   Workspace name
                 </Label>
                 <Input
@@ -118,16 +121,23 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
                   {slugPreview}
                 </p>
                 {field.state.meta.errors?.[0] != null ? (
-                  <p className="text-xs text-[var(--red)]">{String(field.state.meta.errors[0])}</p>
+                  <p className="text-xs text-[var(--red)]">
+                    {String(field.state.meta.errors[0])}
+                  </p>
                 ) : null}
-                {submitError ? <p className="text-xs text-[var(--red)]">{submitError}</p> : null}
+                {submitError ? (
+                  <p className="text-xs text-[var(--red)]">{submitError}</p>
+                ) : null}
               </div>
             )}
           </form.Field>
           <form.Field name="description">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="workspace-desc" className="text-[var(--text-muted)]">
+                <Label
+                  htmlFor="workspace-desc"
+                  className="text-[var(--text-muted)]"
+                >
                   Description (optional)
                 </Label>
                 <Textarea
@@ -140,7 +150,9 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
                   maxLength={200}
                   className="rounded-[6px] border-[var(--border)] bg-[var(--surface)] min-h-0"
                 />
-                <p className="text-right text-xs text-[var(--text-muted)]">{field.state.value.length}/200</p>
+                <p className="text-right text-xs text-[var(--text-muted)]">
+                  {field.state.value.length}/200
+                </p>
               </div>
             )}
           </form.Field>
@@ -148,7 +160,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
             <Button
               type="button"
               variant="outline"
-              className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className=" rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               onClick={() => onOpenChange(false)}
             >
               Cancel
@@ -156,7 +168,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
             <Button
               type="submit"
               disabled={form.state.isSubmitting}
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
             >
               {form.state.isSubmitting ? "Creating…" : "Create Workspace"}
             </Button>
