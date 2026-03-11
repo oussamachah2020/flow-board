@@ -33,4 +33,10 @@ export const envValidationSchema = Joi.object({
     .description(
       'Allowed CORS origin(s), comma-separated (e.g. http://localhost:5173 or https://app.example.com). Defaults to http://localhost:5173.',
     ),
+  EMAIL_VERIFICATION_ENABLED: Joi.boolean()
+    .optional()
+    .default(true)
+    .description(
+      'When false, new users are auto-verified and can sign in without verifying email (useful for local/testing).',
+    ),
 });
