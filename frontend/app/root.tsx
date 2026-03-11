@@ -16,7 +16,7 @@ import { ThemeProvider } from "~/providers/theme-provider";
 import "./app.css";
 
 const FONT_STYLESHEET_URL =
-  "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap";
+  "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

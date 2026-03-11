@@ -1,0 +1,61 @@
+---
+description: Step-by-step procedure for scaffolding a new route/page in Flowboard. Uses React Router 7 file-based routing.
+globs: frontend/app/routes/**/*
+alwaysApply: false
+---
+
+# Skill: New Page (Route)
+
+Follow this procedure when adding a new page/route. Dependencies: [stack.mdc](../stack.mdc), [structure.mdc](../structure.mdc).
+
+## 1. Choose layout
+
+- **App layout** (sidebar, auth required): route is a child of `_app`. Use filename `_app.<pagename>.tsx` or `_app.<segment>.$param.tsx`.
+- **Auth layout** (login, register, no sidebar): use filename `_auth.<pagename>.tsx`.
+- **Standalone** (no layout): use a file that does not start with `_app.` or `_auth.` (e.g. `invite.tsx`, `loading.tsx`).
+
+Existing examples: `_app.dashboard.tsx`, `_app.my-tasks.tsx`, `_app.boards.$boardId.tsx`, `_app.workspaces.$workspaceId.tsx`, `_auth.login.tsx`, `_auth.register.tsx`.
+
+## 2. Name the route file
+
+- **Flat routes:** one file per route in `frontend/app/routes/`.
+- **Naming:** `_app.<slug>.tsx` for app pages (e.g. `_app.dashboard.tsx`, `_app.settings.tsx`). For dynamic segments use `$param` (e.g. `_app.boards.$boardId.tsx`).
+- **Layout route:** The app layout itself is defined in `_app/route.tsx` (with `<Outlet />`). Do not create new layout files unless you are adding a new layout type; add new pages as sibling files `_app.*.tsx`.
+
+## 3. Implement the page component
+
+- **Default export:** the page component must be the default export.
+- **Meta (optional):** export a `meta` function for title/description. Example from this codebase:
+
+```tsx
+type MetaArgs = Record<string, unknown>;
+
+export function meta({}: MetaArgs) {
+  return [
+    { title: "Dashboard | FlowBoard" },
+    { name: "description", content: "Your FlowBoard dashboard" },
+  ];
+}
+```
+
+- Use **path alias** `~/*` for imports (e.g. `~/components/ui/button`, `~/lib/workspace-api`, `~/stores/auth.store`).
+
+## 4. Data loading and state
+
+- **Server data:** Use TanStack Query (`useQuery`, `useMutation`, `useQueries`) with the existing query key patterns: `["workspaces"]`, `["workspaces", id, "boards"]`, `["board", boardId, "tasks"]`, etc. Fetch via `workspaceApi`, `taskApi`, `authApi` from `~/lib/*-api`.
+- **Local UI state:** Use `useState` for modals, toggles, form state.
+- **Auth:** App-layout routes are protected by the `_app/route.tsx` logic (redirect to `/login` when `accessToken === null`). Do not duplicate auth checks in the page unless needed for a specific flow.
+
+## 5. Layout and navigation
+
+- App layout pages render inside `_app/route.tsx`, which provides the sidebar and `<Outlet />`. Your page is the outlet content.
+- Use `Link` from `react-router` for internal links (e.g. `<Link to="/dashboard">`). Use `useNavigate()` for programmatic navigation (e.g. after logout or form submit).
+- Match existing patterns: same spacing and structure as `_app.dashboard.tsx` (e.g. main content area, modals opened via state).
+
+## 6. Checklist
+
+- [ ] File is in `frontend/app/routes/` with the correct prefix (`_app.` or `_auth.`) and optional `$param` segment.
+- [ ] Default export is the page component; `meta` exported if SEO is needed.
+- [ ] Imports use `~/*` and existing API modules / components.
+- [ ] Data fetching uses TanStack Query and consistent query keys; no ad-hoc fetch in useEffect unless required.
+- [ ] New app route is reachable from the sidebar or existing navigation if it should be (add link in `_app/route.tsx` or the appropriate parent).

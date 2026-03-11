@@ -59,9 +59,9 @@ export default function WorkspacePage() {
   });
 
   React.useEffect(() => {
-    if (workspace?.name) {
-      document.title = `${workspace.name} | FlowBoard`;
-      setName(workspace.name);
+    if (workspace) {
+      document.title = workspace.name ? `${workspace.name} | FlowBoard` : "Workspace | FlowBoard";
+      setName(workspace.name ?? "");
       setDescription(workspace.description ?? "");
     }
   }, [workspace?.name, workspace?.description]);
@@ -85,7 +85,10 @@ export default function WorkspacePage() {
   });
 
   function handleSaveSettings() {
-    updateMutation.mutate({ name: name.trim() || undefined, description: description.trim() || undefined });
+    updateMutation.mutate({
+      name: (name ?? "").trim() || undefined,
+      description: (description ?? "").trim() || undefined,
+    });
   }
 
   if (!workspaceId) return null;
@@ -112,13 +115,13 @@ export default function WorkspacePage() {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className=" rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               onClick={() => setInviteOpen(true)}
             >
               Invite Member
             </Button>
             <Button
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className="rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
               onClick={() => setCreateBoardOpen(true)}
             >
               New Board
@@ -135,7 +138,9 @@ export default function WorkspacePage() {
             type="button"
             onClick={() => setTab(t)}
             className={`relative px-4 py-3 text-[13px] capitalize transition-colors ${
-              tab === t ? "text-[var(--text)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"
+              tab === t
+                ? "text-[var(--text)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text)]"
             }`}
           >
             {t}
@@ -149,9 +154,16 @@ export default function WorkspacePage() {
       {/* Tab content */}
       <div className="p-8">
         {tab === "boards" && (
-          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+          <div
+            className="grid gap-3"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            }}
+          >
             {boardsLoading ? (
-              [1, 2, 3].map((i) => <Skeleton key={i} className="h-[160px] rounded-[8px]" />)
+              [1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-[160px] rounded-[8px]" />
+              ))
             ) : boards?.length ? (
               boards.map((board) => (
                 <Link
@@ -159,12 +171,19 @@ export default function WorkspacePage() {
                   to={`/boards/${board.id}`}
                   className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[var(--border-hover)]"
                 >
-                  <p className="text-[13px] font-normal text-[var(--text)]">{board.name}</p>
+                  <p className="text-[13px] font-normal text-[var(--text)]">
+                    {board.name}
+                  </p>
                   <span className="mt-1 inline-block rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-0.5 font-mono text-[11px] text-[var(--text-muted)]">
                     {board.prefix}
                   </span>
                   <p className="mt-3 text-[12px] text-[var(--text-muted)]">
-                    {(board as Board & { columnCount?: number }).columnCount ?? 0} columns · {(board as Board & { memberCount?: number }).memberCount ?? 0} members
+                    {(board as Board & { columnCount?: number }).columnCount ??
+                      0}{" "}
+                    columns ·{" "}
+                    {(board as Board & { memberCount?: number }).memberCount ??
+                      0}{" "}
+                    members
                   </p>
                   <p className="mt-2 font-mono text-[11px] text-[var(--text-subtle)]">
                     Updated {format(new Date(board.updatedAt), "MMM d")}
@@ -177,8 +196,18 @@ export default function WorkspacePage() {
                 onClick={() => setCreateBoardOpen(true)}
                 className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-[var(--border)] bg-[var(--surface)] py-12 text-[var(--text-muted)] transition-colors hover:border-[#2a2a2a]"
               >
-                <svg className="mb-2 size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="mb-2 size-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Create your first board
               </button>
@@ -198,22 +227,37 @@ export default function WorkspacePage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[var(--border-muted)]">
-                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">Member</th>
-                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">Role</th>
-                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">Joined</th>
+                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">
+                      Member
+                    </th>
+                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">
+                      Role
+                    </th>
+                    <th className="px-4 py-3 text-left font-mono text-[10px] uppercase text-[var(--text-subtle)]">
+                      Joined
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {workspace.members.map((member) => (
-                    <tr key={member.id} className="border-b border-[var(--border-muted)] last:border-b-0">
+                    <tr
+                      key={member.id}
+                      className="border-b border-[var(--border-muted)] last:border-b-0"
+                    >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="size-8 border border-[var(--border)] bg-[var(--surface-hover)]">
-                            <AvatarFallback className="text-[13px] text-[var(--text)]">{memberInitial(member)}</AvatarFallback>
+                            <AvatarFallback className="text-[13px] text-[var(--text)]">
+                              {memberInitial(member)}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-[13px] font-normal text-[var(--text)]">{memberDisplayName(member)}</p>
-                            <p className="text-[12px] text-[var(--text-muted)]">{member.user?.email}</p>
+                            <p className="text-[13px] font-normal text-[var(--text)]">
+                              {memberDisplayName(member)}
+                            </p>
+                            <p className="text-[12px] text-[var(--text-muted)]">
+                              {member.user?.email}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -238,7 +282,9 @@ export default function WorkspacePage() {
                 </tbody>
               </table>
             ) : workspace ? (
-              <div className="py-12 text-center text-[13px] text-[var(--text-muted)]">No members listed</div>
+              <div className="py-12 text-center text-[13px] text-[var(--text-muted)]">
+                No members listed
+              </div>
             ) : null}
           </div>
         )}
@@ -246,10 +292,14 @@ export default function WorkspacePage() {
         {tab === "settings" && workspace && (
           <div className="max-w-lg space-y-8">
             <div>
-              <h2 className="mb-4 text-[14px] font-medium text-[var(--text)]">Workspace details</h2>
+              <h2 className="mb-4 text-[14px] font-medium text-[var(--text)]">
+                Workspace details
+              </h2>
               <div className="space-y-4 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-6">
                 <div>
-                  <Label htmlFor="ws-name" className="text-[var(--text-muted)]">Name</Label>
+                  <Label htmlFor="ws-name" className="text-[var(--text-muted)]">
+                    Name
+                  </Label>
                   <Input
                     id="ws-name"
                     value={name}
@@ -258,7 +308,9 @@ export default function WorkspacePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="ws-desc" className="text-[var(--text-muted)]">Description</Label>
+                  <Label htmlFor="ws-desc" className="text-[var(--text-muted)]">
+                    Description
+                  </Label>
                   <Textarea
                     id="ws-desc"
                     value={description}
@@ -269,8 +321,7 @@ export default function WorkspacePage() {
                   />
                 </div>
                 <Button
-                  className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] text-[#080808] hover:bg-[#e0e0e0]"
-                  className="font-normal"
+                  className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
                   onClick={handleSaveSettings}
                   disabled={updateMutation.isPending}
                 >
@@ -279,14 +330,17 @@ export default function WorkspacePage() {
               </div>
             </div>
             <div>
-              <h2 className="mb-4 text-[14px] font-medium text-[var(--red)]">Danger zone</h2>
+              <h2 className="mb-4 text-[14px] font-medium text-[var(--red)]">
+                Danger zone
+              </h2>
               <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-6">
                 <p className="mb-3 text-[13px] text-[var(--text-muted)]">
-                  Deleting this workspace will remove all boards, tasks, and members. This cannot be undone.
+                  Deleting this workspace will remove all boards, tasks, and
+                  members. This cannot be undone.
                 </p>
                 <Button
                   variant="outline"
-                  className="h-[34px] rounded-[6px] border border-[var(--red)] bg-transparent text-[var(--red)] hover:bg-[var(--red)]/10"
+                  className=" rounded-[6px] border border-[var(--red)] bg-transparent text-[var(--red)] hover:bg-[var(--red)]/10"
                   onClick={() => setDeleteOpen(true)}
                 >
                   Delete Workspace
@@ -297,8 +351,16 @@ export default function WorkspacePage() {
         )}
       </div>
 
-      <CreateBoardModal workspaceId={workspaceId} open={createBoardOpen} onOpenChange={setCreateBoardOpen} />
-      <InviteMemberModal workspaceId={workspaceId} open={inviteOpen} onOpenChange={setInviteOpen} />
+      <CreateBoardModal
+        workspaceId={workspaceId}
+        open={createBoardOpen}
+        onOpenChange={setCreateBoardOpen}
+      />
+      <InviteMemberModal
+        workspaceId={workspaceId}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
       <ConfirmDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
@@ -306,7 +368,9 @@ export default function WorkspacePage() {
         description="This will permanently delete the workspace and all its data."
         confirmText={workspace?.name ?? ""}
         deleteLabel="Delete Workspace"
-        onConfirm={() => deleteMutation.mutateAsync()}
+        onConfirm={async () => {
+          await deleteMutation.mutateAsync();
+        }}
       />
     </div>
   );

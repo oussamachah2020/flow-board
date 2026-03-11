@@ -91,7 +91,10 @@ export function InviteMemberModal({
           <form.Field name="email">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="invite-email" className="text-[var(--text-muted)]">
+                <Label
+                  htmlFor="invite-email"
+                  className="text-[var(--text-muted)]"
+                >
                   Email
                 </Label>
                 <Input
@@ -105,7 +108,9 @@ export function InviteMemberModal({
                   aria-invalid={!!field.state.meta.errors?.length}
                 />
                 {field.state.meta.errors?.[0] != null ? (
-                  <p className="text-xs text-[var(--red)]">{String(field.state.meta.errors[0])}</p>
+                  <p className="text-xs text-[var(--red)]">
+                    {String(field.state.meta.errors[0])}
+                  </p>
                 ) : null}
                 {submitError ? (
                   <p className="text-xs text-[var(--red)]">{submitError}</p>
@@ -117,7 +122,7 @@ export function InviteMemberModal({
             <Button
               type="button"
               variant="outline"
-              className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className=" rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               onClick={() => onOpenChange(false)}
             >
               Cancel
@@ -125,7 +130,7 @@ export function InviteMemberModal({
             <Button
               type="submit"
               disabled={form.state.isSubmitting}
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
             >
               {form.state.isSubmitting ? "Sending…" : "Send invitation"}
             </Button>

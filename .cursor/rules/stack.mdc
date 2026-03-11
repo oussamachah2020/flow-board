@@ -1,0 +1,60 @@
+---
+description: Technology stack for the Flowboard project — framework, language, styling, components, state, routing.
+globs: 
+alwaysApply: false
+---
+
+# Stack (Flowboard)
+
+Use this rule when adding dependencies, choosing patterns, or answering questions about the project's technology choices.
+
+## Framework & language
+
+- **React** 19.x — UI framework
+- **TypeScript** 5.x — strict mode, `verbatimModuleSyntax`, ES2022
+- **Build:** Vite 7 with `@tailwindcss/vite` and `vite-tsconfig-paths`
+
+## Routing
+
+- **React Router 7.12** — file-based routing via `flatRoutes()` (see `frontend/app/routes.ts`)
+- **SSR:** enabled in `react-router.config.ts`
+- Route files: `_auth.*` for auth layout, `_app/route.tsx` for app layout, `$param` for dynamic segments
+
+## Styling
+
+- **Tailwind CSS 4** — via `@tailwindcss/vite`
+- **Utilities:** `cn()` from `~/lib/utils` (clsx + tailwind-merge) for all className merging
+- **Design tokens:** CSS variables in `app/app.css`; task colors in `app/lib/design-tokens.ts`
+
+## Component library
+
+- **Radix UI** primitives — Dialog, Select, Popover, Dropdown, Tabs, Alert Dialog, Collapsible, etc.
+- **shadcn-style** wrappers in `app/components/ui/` (Button, Card, Input, Select, Sheet, etc.)
+- **Variants:** class-variance-authority (cva) for Button, Badge, etc.
+- **Icons:** inline SVGs or lucide-react where used (e.g. Calendar, task-detail-sheet)
+
+## State management
+
+- **Zustand** — auth token (`stores/auth.store.ts`), theme (`stores/theme.store.ts`)
+- **TanStack Query** — all server state (workspaces, boards, tasks, profile)
+- **useState** — local UI state (modals, form fields)
+
+## Forms & validation
+
+- **TanStack Form** + **Zod** (e.g. create-workspace-modal)
+- **Zod** for schema validation with `@tanstack/zod-form-adapter`
+
+## HTTP & API
+
+- **Axios** — single instance in `app/lib/axios.ts` with auth interceptors and refresh
+- **API modules:** `auth-api.ts`, `workspace-api.ts`, `task-api.ts` in `app/lib/`
+
+## Backend
+
+- **NestJS 11** — feature modules: auth, board, task, users, workspace, mail, health
+- **TypeORM** — PostgreSQL, entities per domain
+- **Validation:** class-validator, Joi for env
+
+## Path alias
+
+- `~/*` → `frontend/app/*` (see `frontend/tsconfig.json`)

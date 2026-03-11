@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { zodValidator } from "@tanstack/zod-form-adapter";
 import * as React from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { z } from "zod";
 
 import { AuthLayout } from "~/components/auth/auth-layout";
@@ -25,7 +25,17 @@ export function meta({}: MetaArgs) {
   ];
 }
 
+/** Allow redirect only to same-origin paths (no protocol/host). */
+function getSafeRedirect(redirect: string | null): string {
+  if (!redirect || typeof redirect !== "string") return "/dashboard";
+  const trimmed = redirect.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return "/dashboard";
+  return trimmed;
+}
+
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const redirectTo = getSafeRedirect(searchParams.get("redirect"));
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
@@ -43,7 +53,7 @@ export default function Login() {
           password: value.password,
         });
         setAccessToken(data.accessToken);
-        window.location.replace("/dashboard");
+        window.location.replace(redirectTo);
       } catch (err: unknown) {
         const res =
           err &&

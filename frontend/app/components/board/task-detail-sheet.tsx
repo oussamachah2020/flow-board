@@ -21,30 +21,28 @@ import {
   SheetHeader,
   SheetTitle,
 } from "~/components/ui/sheet";
-import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Calendar } from "~/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import { ConfirmDeleteDialog } from "~/components/ui/confirm-delete-dialog";
 import type { Task, Board, WorkspaceMember } from "~/types/workspace";
 import { taskApi } from "~/lib/task-api";
 import { workspaceApi } from "~/lib/workspace-api";
+import { PRIORITY_COLORS, TYPE_COLORS } from "~/lib/design-tokens";
+import { cn } from "~/lib/utils";
 
-const PRIORITIES = [
-  { value: "LOW",    color: "#555555" },
-  { value: "MEDIUM", color: "#4d7fe5" },
-  { value: "HIGH",   color: "#e5a029" },
-  { value: "URGENT", color: "#e54d4d" },
-];
+const PRIORITY_VALUES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+const TYPE_VALUES = [
+  "TASK",
+  "BUG",
+  "HOTFIX",
+  "FEATURE",
+  "IMPROVEMENT",
+  "TEST",
+] as const;
 
-const TYPES = [
-  { value: "TASK",        color: "#444444" },
-  { value: "BUG",         color: "#e54d4d" },
-  { value: "HOTFIX",      color: "#e5a029" },
-  { value: "FEATURE",     color: "#4d7fe5" },
-  { value: "IMPROVEMENT", color: "#4de57a" },
-  { value: "TEST",        color: "#a855f7" },
-];
+const DROPDOWN_CONTENT =
+  "border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/50";
 
 export interface TaskDetailSheetProps {
   workspaceId: string;
@@ -70,6 +68,7 @@ export function TaskDetailSheet({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = React.useState("");
+  const [commentInputFocused, setCommentInputFocused] = React.useState(false);
 
   const {
     data: task,
@@ -170,6 +169,7 @@ export function TaskDetailSheet({
         queryKey: ["task", workspaceId, boardId, taskId],
       });
       setCommentText("");
+      setCommentInputFocused(false);
     },
   });
 
@@ -226,14 +226,13 @@ export function TaskDetailSheet({
     });
   };
   const currentColumnId = resolvedColumnId;
-  const currentPriority = PRIORITIES.find((p) => p.value === task?.priority);
-  const currentType = TYPES.find((t) => t.value === task?.type);
+  const currentColumn = board?.columns?.find((c) => c.id === currentColumnId);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[min(100vw,640px)] max-w-[640px] border-l border-[var(--border)] bg-[var(--bg-subtle)] p-0 text-[var(--text)] sm:w-[640px] sm:max-w-[640px]"
+        className="w-[min(100vw,640px)] max-w-[640px] border-l border-[var(--border-muted)] bg-[var(--bg-subtle)] p-0 text-[var(--text)] sm:w-[640px] sm:max-w-[640px]"
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           navigate(`/boards/${boardId}`, { replace: true });
@@ -250,11 +249,10 @@ export function TaskDetailSheet({
           </div>
         ) : (
           <div className="flex h-full flex-col">
-
             {/* ── HEADER ── */}
             <SheetHeader className="border-b border-[var(--border-muted)] px-6 py-5">
-              <div className="flex flex-col gap-1.5">
-                <span className="font-mono text-[10px] tracking-[0.06em] uppercase text-[var(--text-subtle)]">
+              <div className="flex flex-col gap-2">
+                <span className="font-mono text-[11px] text-[var(--text-subtle)] tracking-wide">
                   {task.code}
                 </span>
                 <SheetTitle className="sr-only">{task.title}</SheetTitle>
@@ -262,55 +260,56 @@ export function TaskDetailSheet({
                   type="text"
                   defaultValue={task.title}
                   onBlur={(e) => handleTitleBlur(e.target.value)}
-                  className="border-0 bg-transparent p-0 text-[17px] font-medium tracking-[-0.02em] text-[var(--text)] shadow-none placeholder:text-[var(--text-subtle)] focus-visible:ring-0 h-auto leading-snug"
+                  className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-[18px] font-semibold tracking-tight text-[var(--text)] shadow-none transition-colors placeholder:text-[var(--text-subtle)] hover:bg-[var(--surface-hover)] focus-visible:ring-1 focus-visible:ring-[var(--border-hover)] focus-visible:outline-0"
                 />
               </div>
             </SheetHeader>
 
             {/* ── BODY ── */}
             <div className="flex flex-1 overflow-hidden">
-
               {/* LEFT — description + comments */}
-              <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
-
-                {/* Description */}
+              <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-6 py-6 scrollbar-none">
+                {/* Description — borderless at rest; hover/focus per spec */}
                 <div className="flex flex-col gap-2">
-                  <Label className="font-mono text-[10px] tracking-[0.06em] uppercase text-[var(--text-subtle)]">
+                  <span className="block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Description
-                  </Label>
+                  </span>
                   <Textarea
                     defaultValue={task.description ?? ""}
                     onBlur={(e) => handleDescriptionBlur(e.target.value)}
                     placeholder="Add a description..."
                     rows={5}
-                    className="resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-[13px] font-light text-[var(--text)] placeholder:text-[var(--text-subtle)] focus-visible:border-[var(--border-hover)] focus-visible:ring-0"
+                    className="w-full resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[13px] leading-relaxed text-[var(--text-muted)] shadow-none placeholder:text-[var(--text-subtle)] focus:ring-1 focus:ring-[var(--border-hover)] focus:outline-0"
                   />
                 </div>
 
-                {/* Comments */}
-                <div className="flex flex-col gap-3">
-                  <Label className="font-mono text-[10px] tracking-[0.06em] uppercase text-[var(--text-subtle)]">
+                {/* Comments / Activity */}
+                <div className="flex flex-col gap-4">
+                  <span className="block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Comments
-                  </Label>
+                  </span>
 
                   {/* Comment list */}
                   {task.comments && task.comments.length > 0 ? (
-                    <ul className="flex flex-col gap-4">
+                    <ul className="flex flex-col gap-5">
                       {task.comments.map((c) => (
                         <li key={c.id} className="group flex gap-3">
-                          <Avatar className="size-7 shrink-0 border border-[var(--border)] bg-[var(--surface)]">
-                            <AvatarFallback className="text-[11px] font-medium text-[var(--text-muted)]">
+                          <Avatar className="size-6 shrink-0 border border-[var(--border-muted)] bg-[var(--surface)]">
+                            <AvatarFallback className="text-[10px] font-medium text-[var(--text-muted)]">
                               {c.author?.profile?.name?.charAt(0) ?? "?"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-center justify-between gap-2">
+                            <div className="mb-2 flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-[13px] font-medium text-[var(--text)]">
+                                <span className="text-[12px] font-semibold text-[var(--text)]">
                                   {c.author?.profile?.name ?? "User"}
                                 </span>
-                                <span className="font-mono text-[10px] text-[var(--text-subtle)]">
-                                  {format(new Date(c.createdAt), "MMM d, HH:mm")}
+                                <span className="font-mono text-[11px] text-[var(--text-subtle)]">
+                                  {format(
+                                    new Date(c.createdAt),
+                                    "MMM d, HH:mm",
+                                  )}
                                 </span>
                               </div>
                               <Button
@@ -347,55 +346,104 @@ export function TaskDetailSheet({
                       ))}
                     </ul>
                   ) : (
-                    <p className="font-mono text-[11px] text-[var(--text-subtle)]">
-                      No comments yet
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div
+                        className="mb-3 size-8 rounded-full bg-[var(--surface)] flex items-center justify-center text-[var(--text-subtle)]"
+                        aria-hidden
+                      >
+                        <svg
+                          className="size-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 2 13.574 2 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-[13px] text-[var(--text-subtle)]">
+                        No comments yet
+                      </p>
+                    </div>
                   )}
 
-                  {/* Add comment */}
-                  <div className="flex flex-col gap-2 pt-1">
-                    <Textarea
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Write a comment..."
-                      rows={3}
-                      className="resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-[13px] font-light text-[var(--text)] placeholder:text-[var(--text-subtle)] focus-visible:border-[var(--border-hover)] focus-visible:ring-0"
-                    />
-                    <div className="flex justify-end">
-                      <Button
-                        size="sm"
-                        className="h-8 rounded-md bg-[var(--accent)] px-4 text-[12px] font-medium text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)] disabled:opacity-40"
-                        onClick={() =>
-                          commentText.trim() &&
-                          commentMutation.mutate(commentText.trim())
-                        }
-                        disabled={
-                          !commentText.trim() || commentMutation.isPending
-                        }
-                      >
-                        Comment
-                      </Button>
+                  {/* Add comment — avatar inline + borderless input; expands on focus + Save/Cancel */}
+                  <div className="flex flex-col gap-3 pt-2">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="size-6 shrink-0 border border-[var(--border-muted)] bg-[var(--surface)]">
+                        <AvatarFallback className="text-[10px] font-medium text-[var(--text-muted)]">
+                          ?
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <Textarea
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onFocus={() => setCommentInputFocused(true)}
+                          onBlur={() => setCommentInputFocused(false)}
+                          placeholder="Add a comment..."
+                          rows={commentInputFocused ? 3 : 1}
+                          className="w-full resize-none rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[13px] text-[var(--text-muted)] shadow-none placeholder:text-[var(--text-subtle)] focus:ring-1 focus:ring-[var(--border-hover)] focus:outline-0"
+                        />
+                        {commentInputFocused && (
+                          <div className="mt-3 flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs text-[var(--text-subtle)]"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setCommentText("");
+                                setCommentInputFocused(false);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="rounded px-4 py-2 text-[11px] font-medium bg-[var(--accent)] text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)] disabled:opacity-40"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                if (commentText.trim())
+                                  commentMutation.mutate(commentText.trim());
+                              }}
+                              disabled={
+                                !commentText.trim() || commentMutation.isPending
+                              }
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT — metadata */}
-              <div className="flex w-[220px] shrink-0 flex-col overflow-y-auto border-l border-[var(--border-muted)] px-5 py-5">
-
-                {/* Status */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+              {/* RIGHT — metadata: stacked label + value per field, w-[200px], all var() tokens */}
+              <div className="flex w-[200px] shrink-0 flex-col overflow-y-auto border-l border-[var(--border-muted)] px-5 py-6 scrollbar-none">
+                {/* Status — label stacked, flat clickable value row, chevron on hover */}
+                <div className="group border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Status
                   </span>
                   <Select
                     value={currentColumnId || undefined}
                     onValueChange={handleColumnChange}
                   >
-                    <SelectTrigger className="h-8 w-full rounded-md border-[var(--border)] bg-[var(--surface)] text-[12px] font-light text-[var(--text)] focus:ring-0">
-                      <SelectValue placeholder="Status" />
+                    <SelectTrigger className="flex w-full cursor-pointer items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-none transition-colors hover:bg-[var(--surface-hover)] focus:ring-1 focus:ring-[var(--border-hover)] [&>svg]:size-3 [&>svg]:text-[var(--text-subtle)] [&>svg]:opacity-0 [&>svg]:transition-opacity group-hover:[&>svg]:opacity-100">
+                      <span className="text-[12px] font-medium text-[var(--text)]">
+                        <SelectValue placeholder="Status" />
+                      </span>
                     </SelectTrigger>
-                    <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
+                    <SelectContent className={DROPDOWN_CONTENT}>
                       {board?.columns?.map((col) => (
                         <SelectItem
                           key={col.id}
@@ -409,9 +457,9 @@ export function TaskDetailSheet({
                   </Select>
                 </div>
 
-                {/* Assignee */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                {/* Assignee — stacked; value: avatar size-4 + name or Unassigned */}
+                <div className="group border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Assignee
                   </span>
                   <Select
@@ -425,11 +473,16 @@ export function TaskDetailSheet({
                       else assignMutation.mutate(v);
                     }}
                   >
-                    <SelectTrigger className="h-8 w-full rounded-md border-[var(--border)] bg-[var(--surface)] text-[12px] font-light text-[var(--text)] focus:ring-0">
-                      <SelectValue placeholder="Unassigned" />
+                    <SelectTrigger className="group flex w-full cursor-pointer items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-none transition-colors hover:bg-[var(--surface-hover)] focus:ring-1 focus:ring-[var(--border-hover)] [&>svg]:size-3 [&>svg]:text-[var(--text-subtle)] [&>svg]:opacity-0 [&>svg]:transition-opacity group-hover:[&>svg]:opacity-100">
+                      <span className="flex w-full items-center gap-1.5 text-[12px] font-medium text-[var(--text)]">
+                        <SelectValue placeholder="Unassigned" />
+                      </span>
                     </SelectTrigger>
-                    <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
-                      <SelectItem value="__none__" className="text-[12px]">
+                    <SelectContent className={DROPDOWN_CONTENT}>
+                      <SelectItem
+                        value="__none__"
+                        className="text-[12px] text-[var(--text-subtle)]"
+                      >
                         Unassigned
                       </SelectItem>
                       {workspace?.members?.map((m) => (
@@ -438,9 +491,9 @@ export function TaskDetailSheet({
                           value={m.id}
                           className="text-[12px]"
                         >
-                          <div className="flex items-center gap-2">
-                            <Avatar className="size-4 shrink-0">
-                              <AvatarFallback className="text-[9px]">
+                          <div className="flex items-center gap-1.5">
+                            <Avatar className="size-4 shrink-0 border border-[var(--border-muted)] bg-[var(--surface)]">
+                              <AvatarFallback className="text-[9px] text-[var(--text-muted)]">
                                 {memberName(m).charAt(0)}
                               </AvatarFallback>
                             </Avatar>
@@ -452,9 +505,9 @@ export function TaskDetailSheet({
                   </Select>
                 </div>
 
-                {/* Priority */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                {/* Priority — stacked; value: colored dot (PRIORITY_COLORS) + label */}
+                <div className="group border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Priority
                   </span>
                   <Select
@@ -466,32 +519,33 @@ export function TaskDetailSheet({
                       })
                     }
                   >
-                    <SelectTrigger className="h-8 w-full rounded-md border-[var(--border)] bg-[var(--surface)] text-[12px] font-light text-[var(--text)] focus:ring-0">
-                      <SelectValue placeholder="Priority">
-                        {currentPriority && (
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="size-2 rounded-full shrink-0"
-                              style={{ background: currentPriority.color }}
-                            />
-                            {currentPriority.value}
-                          </div>
-                        )}
-                      </SelectValue>
+                    <SelectTrigger className="group flex w-full cursor-pointer items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-none transition-colors hover:bg-[var(--surface-hover)] focus:ring-1 focus:ring-[var(--border-hover)] [&>svg]:size-3 [&>svg]:text-[var(--text-subtle)] [&>svg]:opacity-0 [&>svg]:transition-opacity group-hover:[&>svg]:opacity-100">
+                      <span className="flex w-full items-center gap-1.5 text-[12px] font-medium text-[var(--text)]">
+                        <SelectValue placeholder="Priority">
+                          {task.priority && (
+                            <>
+                              <span
+                                className="size-2 shrink-0 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    PRIORITY_COLORS[task.priority],
+                                }}
+                              />
+                              {task.priority}
+                            </>
+                          )}
+                        </SelectValue>
+                      </span>
                     </SelectTrigger>
-                    <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
-                      {PRIORITIES.map((p) => (
-                        <SelectItem
-                          key={p.value}
-                          value={p.value}
-                          className="text-[12px]"
-                        >
-                          <div className="flex items-center gap-2">
+                    <SelectContent className={DROPDOWN_CONTENT}>
+                      {PRIORITY_VALUES.map((p) => (
+                        <SelectItem key={p} value={p} className="text-[12px]">
+                          <div className="flex items-center gap-1.5">
                             <span
-                              className="size-2 rounded-full shrink-0"
-                              style={{ background: p.color }}
+                              className="size-2 shrink-0 rounded-full"
+                              style={{ backgroundColor: PRIORITY_COLORS[p] }}
                             />
-                            {p.value}
+                            {p}
                           </div>
                         </SelectItem>
                       ))}
@@ -499,9 +553,9 @@ export function TaskDetailSheet({
                   </Select>
                 </div>
 
-                {/* Type */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                {/* Type — stacked; value: pill badge bg 10% + border 20% + colored text (TYPE_COLORS) */}
+                <div className="group border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Type
                   </span>
                   <Select
@@ -513,78 +567,78 @@ export function TaskDetailSheet({
                       })
                     }
                   >
-                    <SelectTrigger className="h-8 w-full rounded-md border-[var(--border)] bg-[var(--surface)] text-[12px] font-light text-[var(--text)] focus:ring-0">
-                      <SelectValue placeholder="Type">
-                        {currentType && (
-                          <div className="flex items-center gap-2">
+                    <SelectTrigger className="group flex w-full cursor-pointer items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-none transition-colors hover:bg-[var(--surface-hover)] focus:ring-1 focus:ring-[var(--border-hover)] [&>svg]:size-3 [&>svg]:text-[var(--text-subtle)] [&>svg]:opacity-0 [&>svg]:transition-opacity group-hover:[&>svg]:opacity-100">
+                      <span className="flex w-full items-center gap-1.5 text-[12px] font-medium text-[var(--text)]">
+                        <SelectValue placeholder="Type">
+                          {task.type && TYPE_COLORS[task.type] && (
                             <span
-                              className="h-3 w-0.5 rounded-full shrink-0"
-                              style={{ background: currentType.color }}
-                            />
-                            {currentType.value}
-                          </div>
-                        )}
-                      </SelectValue>
+                              className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                              style={{
+                                backgroundColor: `color-mix(in srgb, ${TYPE_COLORS[task.type]} 10%, transparent)`,
+                                border: `1px solid ${TYPE_COLORS[task.type]}`,
+                                color: TYPE_COLORS[task.type],
+                              }}
+                            >
+                              {task.type}
+                            </span>
+                          )}
+                        </SelectValue>
+                      </span>
                     </SelectTrigger>
-                    <SelectContent className="border-[var(--border)] bg-[var(--surface)]">
-                      {TYPES.map((t) => (
-                        <SelectItem
-                          key={t.value}
-                          value={t.value}
-                          className="text-[12px]"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="h-3 w-0.5 rounded-full shrink-0"
-                              style={{ background: t.color }}
-                            />
-                            {t.value}
-                          </div>
+                    <SelectContent className={DROPDOWN_CONTENT}>
+                      {TYPE_VALUES.map((t) => (
+                        <SelectItem key={t} value={t} className="text-[12px]">
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${TYPE_COLORS[t]} 10%, transparent)`,
+                              border: `1px solid ${TYPE_COLORS[t]}`,
+                              color: TYPE_COLORS[t],
+                            }}
+                          >
+                            {t}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Due Date */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                {/* Due date — stacked; calendar icon + date; overdue = var(--red) */}
+                <div className="border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Due date
                   </span>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="h-8 w-full justify-start rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[12px] font-light text-[var(--text)] hover:bg-[var(--surface-hover)]"
+                        className="flex w-full cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-[12px] font-medium text-[var(--text)] shadow-none transition-colors hover:bg-[var(--surface-hover)] focus:ring-1 focus:ring-[var(--border-hover)]"
                       >
-                        <CalendarIcon className="mr-2 size-3 shrink-0 text-[var(--text-subtle)]" />
+                        <CalendarIcon className="size-3 shrink-0 text-[var(--text-subtle)]" />
                         {task.dueDate ? (
-                          <span
-                            className={
-                              isPast(new Date(task.dueDate))
-                                ? "text-[var(--red)]"
-                                : ""
-                            }
-                          >
-                            {format(new Date(task.dueDate), "MMM d, yyyy")}
-                          </span>
+                          isPast(new Date(task.dueDate)) ? (
+                            <span className="text-[var(--red)]">
+                              {format(new Date(task.dueDate), "MMM d, yyyy")}
+                            </span>
+                          ) : (
+                            format(new Date(task.dueDate), "MMM d, yyyy")
+                          )
                         ) : (
                           <span className="text-[var(--text-subtle)]">
-                            No due date
+                            No date
                           </span>
                         )}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-auto border-[var(--border)] bg-[var(--surface)] p-0"
+                      className={cn("w-auto p-0", DROPDOWN_CONTENT)}
                       align="start"
                     >
                       <Calendar
                         mode="single"
                         selected={
-                          task.dueDate
-                            ? new Date(task.dueDate)
-                            : undefined
+                          task.dueDate ? new Date(task.dueDate) : undefined
                         }
                         onSelect={(date) =>
                           updateMutation.mutate({
@@ -615,50 +669,47 @@ export function TaskDetailSheet({
                   </Popover>
                 </div>
 
-                {/* Created */}
-                <div className="border-b border-[var(--border-muted)] py-3">
-                  <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                {/* Created — read-only, font-mono */}
+                <div className="border-b border-[var(--border-muted)] py-4">
+                  <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                     Created
                   </span>
-                  <span className="font-mono text-[11px] text-[var(--text-muted)]">
+                  <span className="font-mono text-[11px] text-[var(--text-subtle)]">
                     {format(new Date(task.createdAt), "MMM d, yyyy")}
                   </span>
                 </div>
 
-                {/* Created by */}
+                {/* Created by — read-only */}
                 {task.createdBy && (
-                  <div className="py-3">
-                    <span className="mb-1.5 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
+                  <div className="border-b border-[var(--border-muted)] py-4">
+                    <span className="mb-2 block text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--text-subtle)]">
                       Created by
                     </span>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="size-5 shrink-0 border border-[var(--border)]">
-                        <AvatarFallback className="text-[9px] text-[var(--text-muted)]">
+                    <div className="flex items-center gap-1.5">
+                      <Avatar className="size-5 shrink-0 border border-[var(--border-muted)] bg-[var(--surface)]">
+                        <AvatarFallback className="text-[9px] font-mono text-[var(--text-subtle)]">
                           {task.createdBy?.profile?.name?.charAt(0) ?? "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-[12px] text-[var(--text-muted)]">
+                      <span className="font-mono text-[11px] text-[var(--text-subtle)]">
                         {task.createdBy?.profile?.name ?? "User"}
                       </span>
                     </div>
                   </div>
                 )}
 
-                {/* Danger zone */}
-                <div className="mt-6 border-t border-[var(--border-muted)] pt-4">
-                  <span className="mb-2 block font-mono text-[9px] tracking-[0.08em] uppercase text-[var(--text-subtle)]">
-                    Danger zone
-                  </span>
+                {/* Danger zone — border-t mt-auto pt-6; trash + text only; red/50 → red on hover */}
+                <div className="mt-auto border-t border-[var(--border-muted)] pt-6">
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-8 text-[12px] text-[var(--red)] hover:bg-[var(--red)]/10 hover:text-[var(--red)]"
+                    className="flex items-center gap-1.5 text-xs font-medium text-[var(--red)]/50 transition-colors hover:bg-transparent hover:text-[var(--red)]"
                     onClick={() => setDeleteDialogOpen(true)}
                   >
+                    <Trash2 className="size-3.5 shrink-0" />
                     Delete task
                   </Button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -673,8 +724,8 @@ export function TaskDetailSheet({
           confirmText={task.code}
           deleteLabel="Delete task"
           onConfirm={async () => {
-          await deleteTaskMutation.mutateAsync();
-        }}
+            await deleteTaskMutation.mutateAsync();
+          }}
         />
       )}
     </Sheet>

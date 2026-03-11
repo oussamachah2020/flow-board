@@ -88,4 +88,15 @@ export const boardColumnApi = {
   deleteColumn(workspaceId: string, boardId: string, columnId: string) {
     return api.delete(`${boardsPath(workspaceId)}/${boardId}/columns/${columnId}`);
   },
+
+  reorderColumns(
+    workspaceId: string,
+    boardId: string,
+    body: { columns: Array<{ id: string; order: number }> }
+  ) {
+    return api.patch<BoardColumn[]>(
+      `${boardsPath(workspaceId)}/${boardId}/columns/reorder`,
+      body
+    );
+  },
 };

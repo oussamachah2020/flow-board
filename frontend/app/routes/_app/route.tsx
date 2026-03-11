@@ -21,17 +21,17 @@ import { Button } from "~/components/ui/button";
 function FlowBoardLogo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="relative size-4 shrink-0" aria-hidden>
+      <div className="relative size-4 shrink-0 text-[var(--accent)]" aria-hidden>
         <span
-          className="absolute left-0 top-0 size-2 rounded-[1px] border border-[var(--accent)]"
+          className="absolute left-0 top-0 size-2 rounded-[1px] border border-current"
           style={{ transform: "translate(1px, 1px)" }}
         />
         <span
-          className="absolute right-0 top-0 size-2 rounded-[1px] border border-[var(--accent)]"
+          className="absolute right-0 top-0 size-2 rounded-[1px] border border-current"
           style={{ transform: "translate(-1px, 1px)" }}
         />
       </div>
-      <span className="text-[14px] font-semibold tracking-[-0.01em] text-[var(--accent)]">
+      <span className="text-[14px] font-medium tracking-tight text-[var(--text)]">
         FlowBoard
       </span>
     </div>
@@ -40,7 +40,7 @@ function FlowBoardLogo() {
 
 function boardDotColor(name: string): string {
   const i = (name.charCodeAt(0) ?? 0) % 5;
-  const colors = ["#4d7fe5", "#4de57a", "#e5a029", "#a855f7", "#e54d4d"];
+  const colors = ["var(--blue)", "var(--green)", "var(--amber)", "var(--purple)", "var(--red)"];
   return colors[i];
 }
 
@@ -128,31 +128,27 @@ export default function AppLayout() {
   return (
     <div className="flex h-svh bg-[var(--bg)]">
       <aside
-        className="fixed left-0 top-0 z-30 flex h-svh w-[220px] flex-col border-r border-[var(--border-muted)] bg-[var(--bg)]"
+        className="fixed left-0 top-0 z-30 flex h-svh w-[220px] shrink-0 flex-col border-r border-[var(--border-muted)] bg-[var(--bg)]"
       >
-        {/* Logo — 52px, border-bottom */}
-        <div
-          className="flex h-[52px] items-center border-b border-[var(--border-muted)] px-3"
-        >
+        {/* Logo */}
+        <div className="border-b border-[var(--border-muted)] px-4 py-4">
           <Link to="/dashboard" className="flex items-center gap-2">
             <FlowBoardLogo />
           </Link>
         </div>
 
         {/* Workspaces */}
-        <div className="flex-1 overflow-y-auto px-2 py-3">
-          <div className="mb-2 flex items-center justify-between px-2 py-1">
-            <span
-              className="section-label text-[var(--text-subtle)]"
-            >
-              Workspaces
+        <div className="flex-1 overflow-y-auto pt-4">
+          <div className="mb-1 flex items-center justify-between px-4">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-subtle)]">
+              WORKSPACES
             </span>
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => setCreateModalOpen(true)}
-              className="size-8 rounded text-[var(--text-subtle)] transition-colors duration-100 hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className="size-8 rounded-md text-[var(--text-subtle)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               aria-label="Create workspace"
             >
               <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,13 +157,13 @@ export default function AppLayout() {
             </Button>
           </div>
           {workspacesLoading ? (
-            <div className="space-y-1 px-2">
+            <div className="space-y-0.5 px-4">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-9 w-full" />
               ))}
             </div>
           ) : (
-            <ul className="space-y-0.5">
+            <ul className="mt-1 space-y-0.5">
               {workspaces?.map((ws) => {
                 const expanded = expandedWorkspaceId === ws.id;
                 const boards = boardsByWorkspace[ws.id] ?? [];
@@ -178,20 +174,19 @@ export default function AppLayout() {
                       type="button"
                       variant="ghost"
                       onClick={() => setExpandedWorkspaceId((id) => (id === ws.id ? null : ws.id))}
-                      className={`flex h-auto w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-[13px] font-normal transition-colors duration-100 ${
+                      className={`flex h-auto w-full cursor-pointer items-center justify-between rounded-md px-4 py-1.5 text-left text-[13px] font-semibold tracking-tight transition-colors ${
                         isActiveWs
-                          ? "bg-[var(--surface)] font-medium text-[var(--text)]"
-                          : "font-normal text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+                          ? "bg-[var(--surface)] text-[var(--text)]"
+                          : "text-[var(--text)] hover:bg-[var(--surface-hover)]"
                       }`}
-                      style={{ letterSpacing: 0 }}
                     >
                       <span className="truncate">{ws.name}</span>
                       <span className="flex shrink-0 items-center gap-1">
-                        <span className="font-mono text-[11px] text-[var(--text-subtle)]">
+                        <span className="rounded px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-subtle)] bg-[var(--surface)]">
                           {boards.length}
                         </span>
                         <svg
-                          className={`size-4 transition-transform ${expanded ? "rotate-90" : ""}`}
+                          className={`size-3.5 text-[var(--text-subtle)] transition-transform ${expanded ? "rotate-90" : ""}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -201,15 +196,15 @@ export default function AppLayout() {
                       </span>
                     </Button>
                     {expanded && (
-                      <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-[var(--border-muted)] pl-3">
+                      <ul className="mt-0.5 space-y-0.5 pl-5">
                         {boards.map((board) => (
                           <li key={board.id}>
                             <Link
                               to={`/boards/${board.id}`}
-                              className={`flex items-center gap-2 rounded py-1.5 pl-1 text-[12px] transition-colors duration-100 ${
+                              className={`relative flex items-center gap-2 overflow-hidden rounded-md px-4 py-1.5 text-[13px] font-medium transition-colors duration-100 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:content-[''] ${
                                 isBoardActive(board.id)
-                                  ? "bg-[var(--surface)] font-medium text-[var(--text)]"
-                                  : "font-normal text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+                                  ? "bg-[var(--surface)] text-[var(--text)] before:bg-[var(--accent)]"
+                                  : "text-[var(--text-muted)] before:bg-transparent hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
                               }`}
                             >
                               <span
@@ -229,68 +224,43 @@ export default function AppLayout() {
           )}
         </div>
 
-        {/* Theme toggle — above user */}
-        <div className="flex justify-center border-t border-[var(--border-muted)] py-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleThemeClick}
-            className="rounded text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? (
-              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </Button>
-        </div>
-
-        {/* Bottom nav — border-top */}
-        <div className="border-t border-[var(--border-muted)] px-2 py-2">
+        {/* Bottom nav */}
+        <div className="border-t border-[var(--border-muted)] pt-3 pb-2">
           <Link
             to="/dashboard"
-            className={`flex items-center gap-2 rounded-md px-2 py-2 text-[13px] transition-colors duration-100 ${
+            className={`flex cursor-pointer items-center gap-2.5 rounded-md px-4 py-1.5 text-[13px] font-medium transition-colors ${
               isActive("/dashboard")
-                ? "bg-[var(--surface)] font-medium text-[var(--text)]"
-                : "font-normal text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                ? "bg-[var(--surface)] text-[var(--text)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
             }`}
-            style={{ letterSpacing: 0 }}
           >
-            <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="size-4 shrink-0 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
             Dashboard
           </Link>
           <Link
             to="/my-tasks"
-            className={`flex items-center gap-2 rounded-md px-2 py-2 text-[13px] transition-colors duration-100 ${
+            className={`flex cursor-pointer items-center gap-2.5 rounded-md px-4 py-1.5 text-[13px] font-medium transition-colors ${
               isActive("/my-tasks")
-                ? "bg-[var(--surface)] font-medium text-[var(--text)]"
-                : "font-normal text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                ? "bg-[var(--surface)] text-[var(--text)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
             }`}
-            style={{ letterSpacing: 0 }}
           >
-            <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="size-4 shrink-0 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
             My Tasks
           </Link>
           <Link
             to="/settings"
-            className={`flex items-center gap-2 rounded-md px-2 py-2 text-[13px] transition-colors duration-100 ${
+            className={`flex cursor-pointer items-center gap-2.5 rounded-md px-4 py-1.5 text-[13px] font-medium transition-colors ${
               isActive("/settings")
-                ? "bg-[var(--surface)] font-medium text-[var(--text)]"
-                : "font-normal text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+                ? "bg-[var(--surface)] text-[var(--text)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
             }`}
-            style={{ letterSpacing: 0 }}
           >
-            <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="size-4 shrink-0 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -298,25 +268,25 @@ export default function AppLayout() {
           </Link>
         </div>
 
-        {/* User — 52px, border-top */}
-        <div className="flex h-[52px] items-center gap-2 border-t border-[var(--border-muted)] px-2">
+        {/* User */}
+        <div className="border-t border-[var(--border-muted)] px-3 py-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
-                className="flex h-auto w-full items-center gap-2 rounded-md px-2 py-2 text-left font-normal transition-colors duration-100 hover:bg-[var(--surface-hover)]"
+                className="flex h-auto w-full cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 text-left font-normal transition-colors hover:bg-[var(--surface-hover)]"
               >
-                <Avatar className="size-6 border border-[var(--border)] bg-[var(--surface)]">
-                  <AvatarFallback className="text-xs text-[var(--text)]">
+                <Avatar className="size-6 shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface)]">
+                  <AvatarFallback className="text-[10px] font-medium text-[var(--text)]">
                     {initial}
                   </AvatarFallback>
                 </Avatar>
-                <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--text)]">
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--text-muted)]">
                   {displayName}
                 </span>
                 <svg
-                  className="size-4 shrink-0 text-[var(--text-muted)]"
+                  className="size-3.5 shrink-0 text-[var(--text-subtle)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -335,6 +305,12 @@ export default function AppLayout() {
                 onSelect={(e) => e.preventDefault()}
               >
                 Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-[var(--text)] focus:bg-[var(--surface-hover)]"
+                onSelect={handleThemeClick}
+              >
+                {theme === "dark" ? "Light mode" : "Dark mode"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-[var(--text)] focus:bg-[var(--surface-hover)]"

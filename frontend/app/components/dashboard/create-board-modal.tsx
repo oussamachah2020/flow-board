@@ -114,7 +114,10 @@ export function CreateBoardModal({
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="board-name" className="text-[var(--text-muted)]">
+                <Label
+                  htmlFor="board-name"
+                  className="text-[var(--text-muted)]"
+                >
                   Board name
                 </Label>
                 <Input
@@ -130,16 +133,23 @@ export function CreateBoardModal({
                   PREFIX: {prefixPreview}
                 </p>
                 {field.state.meta.errors?.[0] != null ? (
-                  <p className="text-xs text-[var(--red)]">{String(field.state.meta.errors[0])}</p>
+                  <p className="text-xs text-[var(--red)]">
+                    {String(field.state.meta.errors[0])}
+                  </p>
                 ) : null}
-                {submitError ? <p className="text-xs text-[var(--red)]">{submitError}</p> : null}
+                {submitError ? (
+                  <p className="text-xs text-[var(--red)]">{submitError}</p>
+                ) : null}
               </div>
             )}
           </form.Field>
           <form.Field name="description">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="board-desc" className="text-[var(--text-muted)]">
+                <Label
+                  htmlFor="board-desc"
+                  className="text-[var(--text-muted)]"
+                >
                   Description (optional)
                 </Label>
                 <Textarea
@@ -159,7 +169,7 @@ export function CreateBoardModal({
             <Button
               type="button"
               variant="outline"
-              className="h-[34px] rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
+              className=" rounded-[6px] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               onClick={() => onOpenChange(false)}
             >
               Cancel
@@ -167,7 +177,7 @@ export function CreateBoardModal({
             <Button
               type="submit"
               disabled={form.state.isSubmitting}
-              className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
             >
               {form.state.isSubmitting ? "Creating…" : "Create Board"}
             </Button>

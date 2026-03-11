@@ -7,6 +7,7 @@ import { CreateTaskModal } from "~/components/dashboard/create-task-modal";
 import { CreateWorkspaceModal } from "~/components/dashboard/create-workspace-modal";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
+import { PRIORITY_COLORS, TYPE_COLORS } from "~/lib/design-tokens";
 import type { Board, Task, Workspace } from "~/types/workspace";
 import { workspaceApi } from "~/lib/workspace-api";
 
@@ -83,11 +84,7 @@ export default function DashboardPage() {
         <h1 className="text-[18px] font-medium tracking-[-0.01em] text-[var(--text)]">
           Dashboard
         </h1>
-        <span
-          className="text-[11px] text-[var(--text-muted)]"
-        >
-          {dateMono}
-        </span>
+        <span className="text-[11px] text-[var(--text-muted)]">{dateMono}</span>
       </header>
 
       {/* Content — full width, padding */}
@@ -95,11 +92,9 @@ export default function DashboardPage() {
         {/* My Tasks Summary */}
         <section className="mb-10">
           <div className="mb-4 flex items-center justify-between">
-            <p className="section-label text-[var(--text-subtle)]">
-              My Tasks
-            </p>
+            <p className="section-label text-[var(--text-subtle)]">My Tasks</p>
             <Button
-              className="h-8 rounded-[6px] bg-[var(--accent)] px-3 text-[12px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+              className=" rounded-[6px] bg-[var(--accent)] px-3 text-[12px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
               onClick={() => setCreateTaskModalOpen(true)}
             >
               Create task
@@ -114,9 +109,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <div className="grid grid-cols-3 gap-3">
-                <div
-                  className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]"
-                >
+                <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]">
                   <p className="font-mono text-[11px] uppercase text-[var(--text-muted)]">
                     Overdue
                   </p>
@@ -124,9 +117,7 @@ export default function DashboardPage() {
                     {allOverdue}
                   </p>
                 </div>
-                <div
-                  className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]"
-                >
+                <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]">
                   <p className="font-mono text-[11px] uppercase text-[var(--text-muted)]">
                     Due Today
                   </p>
@@ -134,9 +125,7 @@ export default function DashboardPage() {
                     {allDueToday}
                   </p>
                 </div>
-                <div
-                  className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]"
-                >
+                <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]">
                   <p className="font-mono text-[11px] uppercase text-[var(--text-muted)]">
                     Due This Week
                   </p>
@@ -161,11 +150,14 @@ export default function DashboardPage() {
                           <span className="font-mono text-[12px] text-[var(--text-subtle)]">
                             {task.code}
                           </span>
-                          <span className="truncate text-[13px]">{task.title}</span>
+                          <span className="truncate text-[13px]">
+                            {task.title}
+                          </span>
                           <span
                             className="flex items-center gap-1.5 border-l-2 pl-2 text-[11px] font-mono"
                             style={{
-                              borderColor: TYPE_COLORS[task.type] ?? TYPE_COLORS.TASK,
+                              borderColor:
+                                TYPE_COLORS[task.type] ?? TYPE_COLORS.TASK,
                             }}
                           >
                             {task.type}
@@ -173,7 +165,11 @@ export default function DashboardPage() {
                           <span className="flex items-center gap-1.5 text-[11px] font-mono">
                             <span
                               className="size-1.5 rounded-full"
-                              style={{ backgroundColor: PRIORITY_COLORS[task.priority] ?? "#555" }}
+                              style={{
+                                backgroundColor:
+                                  PRIORITY_COLORS[task.priority] ??
+                                  "var(--text-subtle)",
+                              }}
                             />
                             {task.priority}
                           </span>
@@ -201,9 +197,7 @@ export default function DashboardPage() {
         {/* Workspaces */}
         <section className="mb-10">
           <div className="mb-4 flex items-center justify-between">
-            <p
-              className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-subtle)]"
-            >
+            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-subtle)]">
               Workspaces
             </p>
             <button
@@ -212,37 +206,66 @@ export default function DashboardPage() {
               className="rounded p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
               aria-label="Create workspace"
             >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
           {workspacesLoading ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+            <div
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-[180px] rounded-[8px]" />
               ))}
             </div>
           ) : !workspaces?.length ? (
-            <div
-              className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-[var(--border)] bg-[var(--surface)] py-12"
-            >
+            <div className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-[var(--border)] bg-[var(--surface)] py-12">
               <div className="mb-3 rounded-full p-3 text-[var(--text-subtle)]">
-                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="size-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
               </div>
-              <p className="mb-3 text-[13px] text-[var(--text-muted)]">No workspaces yet</p>
+              <p className="mb-3 text-[13px] text-[var(--text-muted)]">
+                No workspaces yet
+              </p>
               <Button
-                className="h-[34px] rounded-[6px] bg-[var(--accent)] px-4 text-[13px] text-[#080808] hover:bg-[#e0e0e0]"
-              className="font-normal"
-              onClick={() => setCreateModalOpen(true)}
+                className=" rounded-[6px] bg-[var(--accent)] px-4 text-[13px] font-normal text-[var(--primary-foreground)] hover:bg-[var(--accent-hover)]"
+                onClick={() => setCreateModalOpen(true)}
               >
                 Create workspace
               </Button>
             </div>
           ) : (
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+            <div
+              className="grid gap-3"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              }}
+            >
               {workspaces.map((ws) => {
                 const boards = boardsByWorkspace[ws.id] ?? [];
                 const memberCount = ws.members?.length ?? 0;
@@ -252,7 +275,9 @@ export default function DashboardPage() {
                     to={`/workspaces/${ws.id}`}
                     className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-6 py-5 transition-colors hover:border-[#2a2a2a]"
                   >
-                    <p className="text-[13px] font-normal text-[var(--text)]">{ws.name}</p>
+                    <p className="text-[13px] font-normal text-[var(--text)]">
+                      {ws.name}
+                    </p>
                     <p className="mt-0.5 font-mono text-[11px] text-[var(--text-subtle)]">
                       {ws.slug}
                     </p>
@@ -266,7 +291,9 @@ export default function DashboardPage() {
                           key={m.id}
                           className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--bg)] bg-[var(--surface-hover)] text-[10px] text-[var(--text)]"
                         >
-                          {(m.user?.profile?.name ?? m.user?.email ?? "?").charAt(0).toUpperCase()}
+                          {(m.user?.profile?.name ?? m.user?.email ?? "?")
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
                       ))}
                     </div>
@@ -290,7 +317,9 @@ export default function DashboardPage() {
               <div className="flex size-5 items-center justify-center rounded-full bg-[var(--surface-hover)] font-mono text-[10px] text-[var(--text-subtle)]">
                 —
               </div>
-              <p className="text-[13px] text-[var(--text-muted)]">No recent activity</p>
+              <p className="text-[13px] text-[var(--text-muted)]">
+                No recent activity
+              </p>
               <span className="ml-auto font-mono text-[11px] text-[var(--text-subtle)]">
                 —
               </span>
@@ -299,7 +328,10 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <CreateWorkspaceModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
+      <CreateWorkspaceModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+      />
       <CreateTaskModal
         open={createTaskModalOpen}
         onOpenChange={setCreateTaskModalOpen}

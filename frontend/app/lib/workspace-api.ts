@@ -70,6 +70,11 @@ export const workspaceApi = {
     return api.post<{ message?: string }>(`${WS}/${workspaceId}/invite`, body);
   },
 
+  /** Accept a workspace invitation by token. Returns the workspace. Requires auth. */
+  acceptInvitation(token: string) {
+    return api.post<Workspace>(`${WS}/invitations/accept`, { token });
+  },
+
   deleteWorkspace(workspaceId: string) {
     return api.delete(`${WS}/${workspaceId}`);
   },

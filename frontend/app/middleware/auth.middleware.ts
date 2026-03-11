@@ -40,9 +40,15 @@ export async function authClientMiddleware(
   const pathname = getPathname(request.url);
   const token = useAuthStore.getState().accessToken;
 
-  // Authenticated user visiting auth pages -> redirect to dashboard
+  // Authenticated user visiting auth pages -> redirect to dashboard or ?redirect=
   if (token && AUTH_PATHS.some((p) => pathname.startsWith(p))) {
-    throw redirect("/dashboard");
+    const url = new URL(request.url);
+    const redirectParam = url.searchParams.get("redirect");
+    const safeRedirect =
+      redirectParam?.trim().startsWith("/") && !redirectParam.trim().startsWith("//")
+        ? redirectParam.trim()
+        : "/dashboard";
+    throw redirect(safeRedirect);
   }
 
   // Protected route without token -> try silent refresh

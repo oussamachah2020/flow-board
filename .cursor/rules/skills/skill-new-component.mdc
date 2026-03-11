@@ -1,0 +1,73 @@
+---
+description: Step-by-step procedure for creating a new UI component in Flowboard. Use when adding a reusable or feature-specific component.
+globs: frontend/app/components/**/*
+alwaysApply: false
+---
+
+# Skill: New UI Component
+
+Follow this procedure when creating a new UI component. Dependencies: [structure.mdc](../structure.mdc), [design.mdc](../design.mdc), [conventions.mdc](../conventions.mdc).
+
+## 1. Decide placement
+
+- **Shared primitive** (buttons, inputs, cards, dialogs) → `frontend/app/components/ui/`
+- **Feature-specific** (modals, sheets, layouts) → `frontend/app/components/<feature>/` (e.g. `dashboard/`, `board/`, `workspace/`, `auth/`)
+
+Use the same folder structure as existing components (e.g. `create-task-modal.tsx` in `dashboard/`, `empty-state.tsx` in `ui/`).
+
+## 2. Name the file
+
+- **File name:** `kebab-case.tsx` (e.g. `empty-state.tsx`, `create-task-modal.tsx`, `task-detail-sheet.tsx`)
+- Do **not** add to a barrel file; consumers import from the file path (e.g. `~/components/ui/empty-state`).
+
+## 3. Define the props interface
+
+- Export an interface named `ComponentNameProps` above the component.
+- Include `className?: string` if the component should be styleable from outside.
+- For controlled overlays (modals, sheets), include `open: boolean` and `onOpenChange: (open: boolean) => void`.
+
+Example (from this codebase):
+
+```tsx
+export interface EmptyStateProps {
+  icon?: React.ReactNode;
+  message: string;
+  action?: React.ReactNode;
+  className?: string;
+}
+```
+
+## 4. Implement the component
+
+- Use **named export:** `export function ComponentName(...)` (or `export { ComponentName }` for forwardRef components).
+- Destructure props and pass through rest to the root element where appropriate.
+- Use **cn()** from `~/lib/utils` for the root element’s className: `className={cn("base-styles", className)}`.
+- For **form elements** (input, textarea, etc.), use `React.forwardRef` and set `displayName` (see `frontend/app/components/ui/input.tsx`).
+- For **variant-heavy** components (e.g. button, badge), use **cva** and `VariantProps<typeof variants>`; export both the component and the variants (see `frontend/app/components/ui/button.tsx`).
+
+## 5. Add data-slot (UI primitives only)
+
+- If the component lives in `components/ui/`, add `data-slot="kebab-name"` on the root element (e.g. `data-slot="empty-state"`, `data-slot="input"`).
+
+## 6. Apply design tokens and typography
+
+- **Colors:** Use CSS variables in Tailwind: `text-[var(--text-muted)]`, `bg-[var(--surface)]`, `border-[var(--border)]`. Do not use raw hex or Tailwind color names for semantic colors.
+- **Radius:** Use `rounded-md` (6px) for controls; `rounded-xl` for cards/surfaces when appropriate.
+- **Typography:** Body text `text-[13px] font-light`; labels/small text `text-[10px]` or `text-[12px]` with `text-[var(--text-subtle)]` or `text-[var(--text-muted)]` as per [design.mdc](../design.mdc).
+- **Spacing:** Use `space-y-1.5` between label and control; `gap-2` / `gap-3` / `gap-4` for sections; `p-6` for dialog/sheet content where consistent with existing modals.
+
+## 7. Design quality checks (this project)
+
+Before considering the component done, verify:
+
+- [ ] All semantic colors use `var(--...)` (e.g. `--text`, `--surface`, `--border`, `--red` for danger).
+- [ ] No hardcoded hex or duplicate priority/type color maps; use `~/lib/design-tokens` (PRIORITY_COLORS, TYPE_COLORS) for task-related colors.
+- [ ] Form controls use `rounded-md`, not `rounded-lg`.
+- [ ] Font sizes and weights match the design system: 13px body, 10px uppercase labels with `tracking-[0.06em]`, Poppins.
+- [ ] Focus states use `focus-visible:ring-1 focus-visible:ring-[var(--ring)]` or the pattern in [design.mdc](../design.mdc).
+- [ ] No barrel export added; imports use the direct file path with `~/*` alias.
+
+## 8. Export and import
+
+- Export only what is needed (component and optionally props type / variants).
+- Consumers import like: `import { EmptyState } from "~/components/ui/empty-state"` or `import { CreateTaskModal } from "~/components/dashboard/create-task-modal"`.

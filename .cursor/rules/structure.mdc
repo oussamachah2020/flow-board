@@ -1,0 +1,86 @@
+---
+description: Folder structure and naming conventions for the Flowboard project.
+globs: 
+alwaysApply: false
+---
+
+# Structure (Flowboard)
+
+Use this rule when adding new files, components, or routes so they follow existing conventions.
+
+## Frontend layout (`frontend/app/`)
+
+```
+app/
+├── components/           # All React components
+│   ├── ui/               # Shared primitives (Radix wrappers, shadcn-style)
+│   │   ├── button.tsx, card.tsx, dialog.tsx, input.tsx, select.tsx, sheet.tsx,
+│   │   │   alert-dialog.tsx, avatar.tsx, badge.tsx, calendar.tsx, checkbox.tsx,
+│   │   │   collapsible.tsx, confirm-delete-dialog.tsx, dropdown-menu.tsx,
+│   │   │   empty-state.tsx, form.tsx, label.tsx, popover.tsx, separator.tsx,
+│   │   │   skeleton.tsx, tabs.tsx, textarea.tsx, tooltip.tsx
+│   ├── auth/             # Auth-specific (e.g. auth-layout.tsx)
+│   ├── dashboard/        # Dashboard modals
+│   │   ├── create-task-modal.tsx, create-workspace-modal.tsx, create-board-modal.tsx
+│   ├── board/            # Board-specific (e.g. task-detail-sheet.tsx)
+│   ├── workspace/        # Workspace-specific (e.g. invite-member-modal.tsx)
+│   └── root-loader.tsx, loading-page.tsx
+├── lib/                  # Utilities, API clients, config
+│   ├── axios.ts, cookies.ts, utils.ts
+│   ├── auth-api.ts, workspace-api.ts, task-api.ts
+│   ├── design-tokens.ts, query-client.ts
+├── providers/            # Context providers (e.g. theme-provider.tsx)
+├── stores/               # Zustand stores (auth.store.ts, theme.store.ts)
+├── types/                # Shared TypeScript types (auth.ts, workspace.ts)
+├── middleware/            # Route middleware (auth.middleware.ts)
+├── routes/               # File-based routes (React Router flatRoutes)
+│   ├── _index.tsx, loading.tsx
+│   ├── _auth.tsx, _auth.login.tsx, _auth.register.tsx, _auth.forgot-password.tsx, ...
+│   ├── _app/route.tsx    # App layout with sidebar
+│   ├── _app.dashboard.tsx, _app.my-tasks.tsx, _app.settings.tsx
+│   ├── _app.boards.$boardId.tsx, _app.workspaces.$workspaceId.tsx
+│   ├── invite.tsx, back-office.tsx
+├── root.tsx
+├── app.css
+└── routes.ts
+```
+
+## Naming conventions
+
+- **Component files:** `kebab-case.tsx` (e.g. `task-detail-sheet.tsx`, `create-task-modal.tsx`)
+- **No barrel exports** — import directly from the file (e.g. `~/components/ui/button`, `~/components/dashboard/create-task-modal`)
+- **Path alias:** `~/*` resolves to `./app/*` (see `frontend/tsconfig.json`)
+
+## UI components
+
+- Live under `app/components/ui/`
+- Use `data-slot="..."` on root elements for styling hooks (e.g. `data-slot="button"`, `data-slot="card"`)
+
+## Routes
+
+- **Layouts:** `_auth` prefix = auth layout; `_app/route.tsx` = app layout (sidebar)
+- **Dynamic segments:** `$param` (e.g. `_app.boards.$boardId.tsx`)
+- **Flat routes:** no nested route folders; single file per route
+
+## Backend layout (`backend/src/`)
+
+```
+src/
+├── auth/           # Auth module (JWT, login, refresh, theme)
+├── board/          # Boards, columns, board members
+├── task/           # Tasks, comments, move, assign
+├── users/          # Users, profiles, registration
+├── workspace/      # Workspaces, members, invitations
+├── common/         # Filters, decorators, DTOs
+├── config/         # env.validation, env-paths
+├── health/         # Health checks
+├── mail/           # Mail service
+├── types/          # Shared types (auth, board, workspace)
+├── app.module.ts
+└── main.ts
+```
+
+- **Per feature:** `*.module.ts`, `*.controller.ts`, `*.service.ts`
+- **Entities:** `entities/*.entity.ts`
+- **DTOs:** `dto/*.dto.ts`
+- **Guards / decorators:** `guards/`, `decorators/`
